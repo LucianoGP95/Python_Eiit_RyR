@@ -1,14 +1,15 @@
 import tkinter as tk
 import pathlib as ph
-import functions
+from functions import askdirectory, asktarget
 
 #Root and frame creation
 root = tk.Tk()
-frame = tk.Frame(root, width=500, height=300, bg='white')
+root.geometry("400x300")
+frame = tk.Frame(root, width=400, height=300, bg='white')
 frame.pack()
 
 #Widgets placement
-button1 = tk.Button(frame, text='Select Reports', command=lambda: askdirectory(text1))
+button1 = tk.Button(frame, text='Select Reports', command=lambda: askdirectory())
 button1.grid(row=0, column=0, padx=5, pady=5)
 
 text1 = tk.Entry(frame)

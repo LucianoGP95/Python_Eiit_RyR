@@ -4,8 +4,8 @@ import engine
 
 #Root and frame creation
 root = tk.Tk()
-frame = tk.Frame(root, width=500, height=300, bg='white')
-frame.pack()
+root.geometry("400x300")
+
 
 #Widgets placement
 button1 = tk.Button(frame, text='Select Reports', command=lambda: askdirectory(text1))

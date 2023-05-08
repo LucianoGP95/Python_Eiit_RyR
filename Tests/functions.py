@@ -1,3 +1,6 @@
+import tkinter as tk
+import tkinter.filedialog
+
 def askdirectory():
     source_dirname = tk.filedialog.askdirectory()
     text1.delete(0, tk.END)
