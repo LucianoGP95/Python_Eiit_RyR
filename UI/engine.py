@@ -6,17 +6,23 @@ import tkinter.filedialog
 from tkinter import messagebox
 import inspect as ins
 import os
-##Tk and directory configuration
-Root = tk.Tk()
-Root.withdraw()
-messagebox.showinfo("Importar", "Selecciona la carpeta que contiene los archivos de reporte")
-source_dirname = tk.filedialog.askdirectory()
-if source_dirname == "":
-    exit()
-messagebox.showinfo("Exportar", "Selecciona la hoja de calculo que va a generar el reporte")
-target_dirname = tk.filedialog.askopenfilename()
-if target_dirname == "":
-    exit()
+##Selection of reports' folder and target
+source_dirname = ""
+target_dirname = ""
+
+def askdirectory():
+    source_dirname = tk.filedialog.askdirectory()
+    text1.delete(0, tk.END)
+    text1.insert(0, string)
+    return source_dirname
+
+def asktarget():
+    target_dirname = tk.filedialog.askopenfilename()
+    text2.delete(0, tk.END)
+    text2.insert(0, string)
+    return target_dirname
+
+
 specific_rows = [4, 5, 6, 7, 8, 9]
 ## Helper Functions
 #Filters each nest reports by reading a substring
