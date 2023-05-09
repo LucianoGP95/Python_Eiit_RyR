@@ -56,6 +56,7 @@ def nest_number(selected_option, options, source, target):
         data = ndallocator(S2)
         Output = writer(S2, data, source)
         Output_S2 = Output
+        #Group all the results and write them in target
         compiler_2(Output_S1, Output_S2, target)
     elif selected_option.get() == options[2]:
         #Nest 1
