@@ -1,6 +1,6 @@
 import tkinter as tk
 import tkinter.filedialog
-from functions import nest_number, update_frow, update_lrow
+from _functions import nest_number, update_frow, update_lrow
 
 source_dirname = ""
 target_dirname = ""
