@@ -34,3 +34,5 @@ build/
 
 #Ignore test reports
 *.csv
+~$*.xlsx
+tempCodeRunnerFile.py
