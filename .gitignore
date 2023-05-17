@@ -125,3 +125,8 @@ tempCodeRunnerFile.*
 #Ignore test reports
 *.csv
 ~$*.xlsx
+#Ignore pyinstaller files
+*/*/build
+*/*/dist
+*.spec
+*/*/__pycache__
