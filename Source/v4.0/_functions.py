@@ -39,7 +39,12 @@ def writer(nest, data, source_dirname):
     for i, filename in enumerate(nest):
         Source = pd.read_csv(source_dirname + "/" + nest[i], skiprows = lambda x: x not in specific_rows, header=None) #Open the csv and build a Dataframe with the target rows
         Text = Source.iloc[:, 2] #Indexes the test name column
-        MEAS = Source.iloc[:, 3] #Indexes the measure column
+        MEAS = np.zeros(len(specific_rows))
+        for j in range(data.shape[0]):
+            try:
+                MEAS[j] = float(Source.iloc[j, 3])
+            except (ValueError, TypeError):
+                MEAS[j] = 0.0
         lo_limit = Source.iloc[:, 4] #Indexes the low limit value
         hi_limit = Source.iloc[:, 5] #Indexes the high limit value
         data[:, i] = MEAS #Writes the column on the array  
@@ -47,7 +52,7 @@ def writer(nest, data, source_dirname):
     Output = pd.concat([Text, Output, lo_limit, hi_limit], axis=1)
     return Output
 #Concatenates the data frames for each nest
-def compiler_1(Output_S1, Output_S2, target):
+def compiler_1(Output_S1, target):
     Final = pd.concat([Output_S1])
     Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
     os.startfile(target) #Opens the file for review
