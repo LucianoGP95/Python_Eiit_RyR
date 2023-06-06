@@ -68,7 +68,7 @@ last_r.grid(row=7, column=0, padx=50, pady=5)
 last_r.bind("<KeyRelease>", lambda event: update_lrow(event, last_r)) #Bind update of the number with an update function
 
 # create a drop-down list to select the number of nests
-options = ['Select nests', 'One nest', 'Two nests', 'Four nests']
+options = ['Select nests', 'All nests', 'Two nests', 'Four nests']
 selected_option = tk.StringVar() #Create an instance of the stringVar class that will hold the selected option
 selected_option.set(options[0]) #Set the default option
 combo_box = tk.OptionMenu(frame, selected_option, *options)
