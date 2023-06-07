@@ -1,3 +1,4 @@
 v4.0
 
--Added one nest option for fixture testing
+-Added the option of reading all nests from a directory for fixture testing
+-Added support for string values. They are passed as zero instead of throwinag an exception.
