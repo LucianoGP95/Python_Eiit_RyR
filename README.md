@@ -1,3 +1,5 @@
-# Python_RyR
+# Python_Eiit_RyR
 
-Reproducibility test extractor for the company Eiit.
+Data science for the company Eiit:
+-RyR_Generator: Reproducibility test extractor.
+-RyR_Analyser: Test visualization and analysis. 
