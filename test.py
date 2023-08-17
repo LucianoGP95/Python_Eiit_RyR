@@ -1,5 +1,3 @@
-import numpy as np
-
-xx = np.arange(9).reshape(3, 3)
-
-print(xx)
+import numpy as np 
+a = np.array([[1, 2], [3, 4]]) 
+print (type(a))
