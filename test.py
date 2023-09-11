@@ -1,9 +1,7 @@
-x = 0
-y = 0
+import pandas as pd
 
-def addition(x,y):
-    z = x + y
-    return z
-
-z = addition(x,y)
-print(z)
+s1 = pd.Series(['a', 'b'])
+s2 = pd.Series(['c', 'd'])
+data = pd.concat([s1, s2])
+data = pd.concat([s1, s2], ignore_index=True)
+print(data)
