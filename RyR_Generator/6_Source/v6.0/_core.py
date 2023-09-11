@@ -5,7 +5,7 @@ import os
 import openpyxl as opxl #Read and write in xlsx
 import pandas as pd #Import from csv and manipulate data
 import numpy as np
-import filenumber_checker as check
+import _filenumber_checker as check
 
 source_dirname = ""
 target_dirname = ""

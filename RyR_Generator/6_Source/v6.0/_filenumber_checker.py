@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 def check_file_counts_2S(source_dirname):
+    '''Checks if the number of files of each nest is even to avoid concatenating srrays of different size'''
     files = os.listdir(source_dirname)
     reports = [file for file in files if file.endswith(".csv")]
     i = sum(1 for filename1 in reports if "S1" in filename1)
@@ -15,6 +16,7 @@ def check_file_counts_2S(source_dirname):
         return
 
 def check_file_counts_4S(source_dirname):
+    '''Checks if the number of files of each nest is even to avoid concatenating srrays of different size'''
     files = os.listdir(source_dirname)
     reports = [file for file in files if file.endswith(".csv")]
     i = sum(1 for filename1 in reports if "S1" in filename1)
