@@ -32,5 +32,5 @@ def check_file_counts_4S(source_dirname):
 
 #Test Script
 if __name__ == "__main__":  
-    source_dirname = "C:/Users/luciano.galan/Desktop/Code/Python_Eiit_RyR/RyR_Generator/1_Place_Reports_Here" 
+    source_dirname = "../../1_Place_Reports_Here" 
     check_file_counts_2S(source_dirname)
