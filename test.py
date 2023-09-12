@@ -1,7 +1,6 @@
-import pandas as pd
+# mymodule.py
 
-s1 = pd.Series(['a', 'b'])
-s2 = pd.Series(['c', 'd'])
-data = pd.concat([s1, s2])
-data = pd.concat([s1, s2], ignore_index=True)
-print(data)
+def add_numbers(a: int, b: int) -> int:
+    return a + b
+
+result = add_numbers(10, 20)
