@@ -330,5 +330,3 @@ if __name__ == '__main__':
     dbh.delete_table("new_test")
     #Clear the database
     dbh.clear_database()
-
-
