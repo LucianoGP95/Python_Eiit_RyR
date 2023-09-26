@@ -150,7 +150,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             pass
 
     def store_directory(self, *argv):
-        '''Generates table(s) for all the compatible files inside a custom directory path argv[0]. If the directory isn't given it uses 
+        '''Generates table(s) for all the compatible files inside the custom directory. If the directory isn't given it uses 
         ../data/'''
         self.source_path = ["../data/" + name for name in os.listdir("../data/")]
         if argv and len(argv) > 0:

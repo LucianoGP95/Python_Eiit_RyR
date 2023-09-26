@@ -65,7 +65,7 @@ plt.show()
 
 print(type(limit_bars))
 
-def test(point, limit_bars): ######Finish
+def test(point, limit_bars): ######To Finish
     '''Tests a single point, given limit bars'''
     xx = np.linspace(plot_limits[0], plot_limits[1], 100)
     index = min(range(len(xx)), key=lambda i: abs(xx[i] - point[1]))
