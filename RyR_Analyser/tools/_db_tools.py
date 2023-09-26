@@ -1,4 +1,4 @@
-#V1.0 21/09/2023
+#V2.0 22/09/2023
 import pandas as pd
 import sqlite3
 import os
@@ -175,7 +175,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             self.df = df
             self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
             self.conn.commit()
-            print(f"Dataframe stored as {table_name}")
+            print(f"Dataframe stored as *{table_name}*")
         except Exception as e:
             print(f"Error storing the dataframe: {str(e)}")
 

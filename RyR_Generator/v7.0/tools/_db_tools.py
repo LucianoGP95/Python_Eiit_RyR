@@ -1,4 +1,4 @@
-#V1.0 21/09/2023
+#V2.0 22/09/2023
 import pandas as pd
 import sqlite3
 import os
@@ -169,6 +169,16 @@ class SQLite_Data_Extractor(SQLite_Handler):
         except Exception as e:
             pass
 
+    def store_df(self, df, table_name):
+        '''Stores the desired dataframe as a table in connected the database.'''
+        try:
+            self.df = df
+            self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
+            self.conn.commit()
+            print(f"Dataframe stored as *{table_name}*")
+        except Exception as e:
+            print(f"Error storing the dataframe: {str(e)}")
+
     def retrieve(self, table_name):
         '''Retrieves a table from the database as a dataframe object. If the arg. is a list or tuple it will try to concatenate
         all the tables'''
@@ -320,5 +330,3 @@ if __name__ == '__main__':
     dbh.delete_table("new_test")
     #Clear the database
     dbh.clear_database()
-
-

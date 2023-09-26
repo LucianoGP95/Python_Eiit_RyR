@@ -8,6 +8,7 @@ def prepare_data(target):
     data = pd.read_excel(target)
     df = data.iloc[2:, 1:-2]
     df.reset_index(drop=True, inplace=True)
+    df.columns = range(df.shape[1])
     dbh.store_df(df, "measures")
     dbh.consult_tables()
     dbh.close_conn()
