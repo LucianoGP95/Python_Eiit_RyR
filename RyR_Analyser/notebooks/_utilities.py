@@ -27,7 +27,6 @@ def prepare_database(df, table_name):
     dbh = db.SQLite_Data_Extractor("database.db") #Allows for database management
     dbh.store_df(df, table_name) #Store the dataframe in the connected database
     dbh.consult_tables() #Checks results
-    dbh.close_conn()
 
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, filter=None):
     '''Plots a dataframe into a scatter plot using one of the dimensions of the colous measurement. 
