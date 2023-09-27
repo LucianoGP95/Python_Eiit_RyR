@@ -25,6 +25,8 @@ def cc_current(length, intensity, vdrop, material):
             k = 56
         case "Al":
             k = 35
+        case other:
+            print("Not supported material: Cu, Al")
     
     S = (2*L*I)/(k*dV)
     
