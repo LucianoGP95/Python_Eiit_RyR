@@ -140,7 +140,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
         self._inputhandler() #Handles the source input format
         for i, source in enumerate(self.source_path):
             self._filetypehandler(source) #Handles the filetype
-            if self.extension == "excel":
+            if self.extension == "xlsx":
                 self._datasheet_excel(i, source)
             if self.extension == "csv":
                 self._datasheet_csv(i, source)
@@ -160,7 +160,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 print("    Unrecognized directory. Using default one.")
         for i, source in enumerate(self.source_path):
             self._filetypehandler(source) #Handles the filetype
-            if self.extension == "excel":
+            if self.extension == "xlsx":
                 self._datasheet_excel(i, source)
             if self.extension == "csv":
                 self._datasheet_csv(i, source)
@@ -170,7 +170,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             pass
 
     def store_df(self, df, table_name):
-        '''Stores the desired dataframe as a table in connected the database.'''
+        '''Stores the desired dataframe as a table in the connected the database.'''
         try:
             self.df = df
             self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
@@ -324,6 +324,8 @@ if __name__ == '__main__':
     dbh.rename_table("test1", "new_test")
     dbh.retrieve("new_test")
     dbh.close_conn()
+    
+    dbh.store_directory()
     
     ###WARNING zone###
     #Delete a single table
