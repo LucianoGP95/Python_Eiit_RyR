@@ -1,3 +1,0 @@
-v4.0
-
--Exception handling. Makes sure the source folder have the same number of report files per nest to avoid a concatenation error.

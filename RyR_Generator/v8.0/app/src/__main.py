@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 from _core import nest_number, update_frow, update_lrow, row_auto_updater
+os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script directory
 # Helper functions
 source_dirname = ""
 target_dirname = ""
@@ -43,8 +44,12 @@ def update_Go():
 ###UI Design
 ##Main window creation
 root = tk.Tk()
+root.iconbitmap(os.path.abspath("../assets/icon.ico")) #Custom icon placement
 root.title("RyR Generator")
-frame = ttk.Frame(root, width=800, height=200)
+background_image = tk.PhotoImage(os.path.abspath("../assets/background.png"))  #Backgrounf image
+background_label = tk.Label(root, image=background_image)
+background_label.place(relwidth=1, relheight=1)  #Fill the entire window
+frame = ttk.Frame(root, width=800, height=600)
 frame.grid(column=0, row=0, padx=10, pady=10, sticky="nsew")
 ##Widgets creation
 #Create the button to select the reports folder and the associated text label
@@ -92,3 +97,4 @@ text2.bind("<KeyRelease>", lambda event: update_Go())
 selected_option.trace_add('write', lambda *args: update_Go())  # Dropdown menu using traces
 
 root.mainloop()
+

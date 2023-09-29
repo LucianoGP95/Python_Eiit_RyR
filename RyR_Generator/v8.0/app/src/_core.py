@@ -19,7 +19,7 @@ def update_frow(event, first_r):
     global frow, specific_rows
     frow = int(first_r.get())
     specific_rows = list(range(frow-1, lrow))
-    
+
 def update_lrow(event, last_r): 
     '''Refresh the last row selected in the UI'''
     global lrow, specific_rows
@@ -27,6 +27,8 @@ def update_lrow(event, last_r):
     specific_rows = list(range(frow-1, lrow))
 
 def row_auto_updater(source_dirname):
+    '''Updates the rows and specific rows variables to match the size of the test rows
+    of the first report from the source directory each time new reports are imported'''
     global frow, lrow, specific_rows
     file_list = os.listdir(source_dirname)
     first_file = None
