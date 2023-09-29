@@ -1,6 +1,7 @@
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
+from __globals import *
 import sys
 sys.path.append("../tools/")
 import _db_tools as db
@@ -29,50 +30,54 @@ def prepare_database(df, table_name):
     dbh.consult_tables() #Checks results
 
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, filter=None):
-    '''Plots a dataframe into a scatter plot using one of the dimensions of the colous measurement. 
-    Optionally filters the plot by fiber axis values and specific fiber(s) axis.'''
-    i = 0  #Counter used for the fiber number in the legend
-    if filter == 'x':  #Guide selector (filter) using strings
-        for index, row in df.iterrows():
-            if index % 2 != 0:
-                i += 1
-                plt.scatter(
-                    list(element + 1 for element in list(range(df.shape[1]))),
-                    df.iloc[index],
-                    label=legend_label + f'{i}' if legend_label else None,
-                )
+    """ Plots a DataFrame as a scatter plot with optional filtering and customization.
+    Parameters:
+        df (DataFrame): The input DataFrame containing the data.
+        title (str, optional): The title of the plot.
+        xlabel (str, optional): The label for the x-axis.
+        ylabel (str, optional): The label for the y-axis.
+        legend_label (str, optional): The label for the legend.
+        filter (str, int, list, tuple, optional): Filter for selecting specific data points.
+            - 'x' plots rows with odd indices.
+            - 'y' plots rows with even indices.
+            - None plots all rows.
+            - int, list, or tuple selects specific row(s) based on the provided filter.
+    Returns:
+        None """
+    i = 0 #Preallocation
+    def labeler(filter, i, index):
+        '''Small function to correctly label legends'''
+        if filter == "x" or filter == "y":
+            label = f"{legend_label} {i} {filter}"
+        elif isinstance(filter, (int, list, tuple)):
+            label = f"{legend_label} {index}"
+        elif filter == None:
+            label = None
+        return label
+    #Determine the rows to plot based on the filter
+    if filter == 'x':
+        rows_to_plot = df.iloc[1::2] #Rows with odd indices
     elif filter == 'y':
-        for index, row in df.iterrows():
-            if index % 2 == 0:
-                i += 1
-                plt.scatter(
-                    list(element + 1 for element in list(range(df.shape[1]))),
-                    df.iloc[index],
-                    label=legend_label + f'{i}' if legend_label else None,
-                )
-    elif filter == None: #Plots all fibers
-        for index, row in df.iterrows():
-            i += 1
-            plt.scatter(
-                list(element + 1 for element in list(range(df.shape[1]))),
-                df.iloc[index],
-                label=legend_label + f'{i}' if legend_label else None,
-            )
-    elif isinstance(filter, (int, list, tuple)): #Specific fiber filtering
-        if isinstance(filter, int):
-            fibers = [filter]
-        else:
-            fibers = filter
-        for fiber in fibers:
-            plt.scatter(
-            list(element + 1 for element in list(range(df.shape[1]))),
-            df.iloc[fiber-1],
-            label=legend_label + f'{fiber}' if legend_label else None,
-            )
-    plt.title(title) if title else None
-    plt.xlabel(xlabel) if xlabel else None
-    plt.ylabel(ylabel) if ylabel else None
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend_label else None
+        rows_to_plot = df.iloc[::2]  #Rows with even indices
+    elif filter is None:
+        rows_to_plot = df #All rows
+    elif isinstance(filter, (int)):
+        filter = [filter]
+        rows_to_plot = df.iloc[filter]
+    elif isinstance(filter, (list, tuple)):
+        rows_to_plot = df.iloc[filter]
+    for index, row in rows_to_plot.iterrows(): #Plot the selected rows
+        i += 1
+        plt.scatter(
+            list(range(1, df.shape[1] + 1)),
+            row,
+            label=labeler(filter, i, index)
+        )
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if legend_label:
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.show()
 
 #test script
