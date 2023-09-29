@@ -81,4 +81,3 @@ if __name__ == "__main__":
     prepare_database(df, "PASSAT_B9_TOP") #Store a df inside the database of the project
     dbh = db.SQLite_Data_Extractor("database.db") #Connect to the database
     df = dbh.retrieve("PASSAT_B9_TOP") #Get the desired tooling data 
-
