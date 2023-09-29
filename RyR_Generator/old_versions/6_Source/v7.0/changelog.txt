@@ -1,0 +1,4 @@
+v7.0
+
+-Changed default rows to search in the report
+-ttk migration
