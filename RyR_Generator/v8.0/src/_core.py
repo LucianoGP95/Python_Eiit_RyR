@@ -10,10 +10,10 @@ import _filenumber_checker as check
 source_dirname = ""
 target_dirname = ""
 frow = 5
-lrow = 18
+lrow = 10
 specific_rows = list(range(frow-1, lrow))
 
-## Row updater functions
+##Row updater functions
 def update_frow(event, first_r): 
     '''Refresh the first row selected in the UI'''
     global frow, specific_rows
@@ -26,7 +26,31 @@ def update_lrow(event, last_r):
     lrow = int(last_r.get())
     specific_rows = list(range(frow-1, lrow))
 
-## Helper functions
+def row_auto_updater(source_dirname):
+    global frow, lrow, specific_rows
+    file_list = os.listdir(source_dirname)
+    first_file = None
+    for file in file_list:
+        if file.endswith(".csv"):
+            first_file = file
+            break
+    import csv
+    csv_file_path = os.path.join(source_dirname, first_file)
+    csv_data = []
+    with open(csv_file_path, 'r', newline='') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        csv_data = [row[0] for row in csv_reader]
+        for i, row in enumerate(csv_data):
+            ctrl_text = row.split('-')[0].strip()
+            if ctrl_text == "TEST":
+                frow = i+2
+            if ctrl_text == "CTRL":
+                lrow = i
+    specific_rows = list(range(frow, lrow+1))
+    print(specific_rows)
+    return frow, lrow
+
+##Helper functions
 def nest_filter(source_dirname, substring):
     '''Filters each nest reports by reading a substring in the filename'''
     file_list = os.listdir(source_dirname)
