@@ -54,3 +54,14 @@ def writer(nest, data, source_dirname):
 #test script
 if __name__ == "__main__":
     import_to_db("../1_Place_Reports_Here/", "database.db")
+
+import os
+import numpy as np
+import pandas as pd
+import sys
+sys.path.append("../tools/")
+import _db_tools
+
+dbh = _db_tools.SQLite_Data_Extractor("database.db") 
+dbh.store("PASSAT_B9_20230929_13h35m07s_S1_P.csv")
+dbh.consult_tables()

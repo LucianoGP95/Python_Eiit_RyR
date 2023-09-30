@@ -1,0 +1,15 @@
+Serial Number: PASSAT_B9
+Table ID: Passat_B9  Date: 09-29-2023  Time: 13:35:07
+-------------------------------------------------------------------------------------------------------------------------------
+TEST, STATE, NAME, MEAS, LO LIM, HI LIM, UNIT, SPEC ID, TIMESTAMP
+1-101,Passed,Guia_Luz_Blanco_FB1_X,0.3326,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-102,Passed,Guia_Luz_Blanco_FB1_Y,0.3557,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-105,Passed,Guia_Luz_Blanco_FB2_X,0.3325,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-106,Passed,Guia_Luz_Blanco_FB2_Y,0.3573,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-109,Passed,Guia_Luz_Blanco_FB3_X,0.342,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-110,Passed,Guia_Luz_Blanco_FB3_Y,0.3628,0,0.4,P/F,NA,09-29-2023 13:35:13
+1-109,Passed,Guia_Luz_Blanco_FB4_X,0.3318,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+1-110,Passed,Guia_Luz_Blanco_FB4_Y,0.3572,0.1,0.4,P/F,NA,09-29-2023 13:35:13
+CTRL-1,Passed,Numero de Tests,8,8,8,P/F,Numero de Tests,09-29-2023 13:35:13
+-------------------------------------------------------------------------------------------------------------------------------
+Final Status: Passed

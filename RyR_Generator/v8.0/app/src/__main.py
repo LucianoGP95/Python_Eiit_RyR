@@ -8,7 +8,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script d
 source_dirname = ""
 target_dirname = ""
 
-def validate_numeric_input(value):
+def validate_numeric_input(value): #Unused
     '''Ensure input values for rows are always numeric'''
     if value.isdigit():
         return True
@@ -68,14 +68,16 @@ text2.grid(row=3, column=0, padx=50, pady=5)
 validation = root.register(validate_numeric_input)  #Restricts the input value to a number
 label1 = ttk.Label(frame, text="First row:")
 label1.grid(row=4, column=0, padx=50, pady=0)
-first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P'))
+#first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+first_r = ttk.Entry(frame, width=5)
 first_r.insert(0, 5)  #Initial Value
 first_r.grid(row=5, column=0, padx=50, pady=5)
 first_r.bind("<KeyRelease>", lambda event: update_frow(event, first_r))  #Bind update of the number with an update function
 
 label2 = ttk.Label(frame, text="Last row:")
 label2.grid(row=6, column=0, padx=50, pady=0)
-last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P'))
+#last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+last_r = ttk.Entry(frame, width=5)
 last_r.insert(0, 10)  #Initial Value
 last_r.grid(row=7, column=0, padx=50, pady=5)
 last_r.bind("<KeyRelease>", lambda event: update_lrow(event, last_r))  # Bind update of the number with an update function

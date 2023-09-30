@@ -1,4 +1,4 @@
-#V2.0 22/09/2023
+#V4.0 30/09/2023
 import pandas as pd
 import sqlite3
 import os
@@ -132,6 +132,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
     from raw data or adds tables to it from raw data'''
     def __init__(self, db_name):
         super().__init__(db_name)  #Calls the parent class constructor
+        self.set_csv_rules() #Sets default rules for csv extraction
         self.source_name = None
 
     def store(self, source):
@@ -140,7 +141,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
         self._inputhandler() #Handles the source input format
         for i, source in enumerate(self.source_path):
             self._filetypehandler(source) #Handles the filetype
-            if self.extension == "excel":
+            if self.extension == "xlsx":
                 self._datasheet_excel(i, source)
             if self.extension == "csv":
                 self._datasheet_csv(i, source)
@@ -150,17 +151,22 @@ class SQLite_Data_Extractor(SQLite_Handler):
             pass
 
     def store_directory(self, *argv):
-        '''Generates table(s) for all the compatible files inside a custom directory path argv[0]. If the directory isn't given it uses 
+        '''Generates table(s) for all the compatible files inside the custom directory. If the directory isn't given it uses 
         ../data/'''
-        self.source_path = ["../data/" + name for name in os.listdir("../data/")]
+        print(len(argv))
         if argv and len(argv) > 0:
             try:
                 self.source_path = [argv[0] + name for name in os.listdir(argv[0])]
             except Exception as e:
                 print("    Unrecognized directory. Using default one.")
+        else:
+            try: #Avoids errors if there isn't a "../data" path in the project
+                self.source_path = ["../data/" + name for name in os.listdir("../data/")]
+            except Exception as e:
+                print("    No ../data/ directory, aborting operation")
         for i, source in enumerate(self.source_path):
             self._filetypehandler(source) #Handles the filetype
-            if self.extension == "excel":
+            if self.extension == "xlsx":
                 self._datasheet_excel(i, source)
             if self.extension == "csv":
                 self._datasheet_csv(i, source)
@@ -170,7 +176,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             pass
 
     def store_df(self, df, table_name):
-        '''Stores the desired dataframe as a table in connected the database.'''
+        '''Stores the desired dataframe as a table in the connected database.'''
         try:
             self.df = df
             self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
@@ -209,6 +215,10 @@ class SQLite_Data_Extractor(SQLite_Handler):
             except Exception as e:
                 print(f"Error concatenating dataframes: {str(e)}")
         return self.df
+
+    def set_csv_rules(self, sep=","):
+        '''Used to modify the rules that pandas uses to parse csv files.'''
+        self.sep = sep
 
     def rename_table(self, old_name, new_name):
         super().rename_table(old_name, new_name) 
@@ -264,7 +274,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                     raise Exception(f"Error importing data into pandas: {str(e)}")
             case "csv":
                 try:
-                    self.df = pd.read_csv(source, header=None)
+                    self.df = pd.read_csv(source, header=None, sep=self.sep)
                 except Exception as e:
                     raise Exception(f"Error importing data into pandas: {str(e)}")
             case _:
@@ -324,6 +334,8 @@ if __name__ == '__main__':
     dbh.rename_table("test1", "new_test")
     dbh.retrieve("new_test")
     dbh.close_conn()
+    
+    dbh.store_directory()
     
     ###WARNING zone###
     #Delete a single table
