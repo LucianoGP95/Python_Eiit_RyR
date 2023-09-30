@@ -2,7 +2,7 @@ from dataclasses import dataclass
 ####Global variables####
 @dataclass
 class Globals:
-    tooling: str = "PASSAT_B9"
+    tooling: str = ""
     leds_per_nest: int = 3
     tolerance: float = 0.015
     lo_tolerance: float = 0.02
