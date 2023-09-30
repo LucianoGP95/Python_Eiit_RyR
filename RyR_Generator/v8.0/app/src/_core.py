@@ -17,13 +17,19 @@ specific_rows = list(range(frow-1, lrow))
 def update_frow(event, first_r): 
     '''Refresh the first row selected in the UI'''
     global frow, specific_rows
-    frow = int(first_r.get())
+    try: #Handles errors when the entry is empty
+        frow = int(first_r.get()) 
+    except Exception as e:
+        pass
     specific_rows = list(range(frow-1, lrow))
 
 def update_lrow(event, last_r): 
     '''Refresh the last row selected in the UI'''
     global lrow, specific_rows
-    lrow = int(last_r.get())
+    try: #Handles errors when the entry is empty
+        frow = int(last_r.get()) 
+    except Exception as e:
+        pass
     specific_rows = list(range(frow-1, lrow))
 
 def row_auto_updater(source_dirname):
