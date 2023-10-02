@@ -2,13 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import os
-from _core import nest_number, update_frow, update_lrow
-os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script directory
-###Helper functions
+from _core import nest_number, update_frow, update_lrow, row_auto_updater
+# Helper functions
 source_dirname = ""
 target_dirname = ""
 
-def validate_numeric_input(value): 
+def validate_numeric_input(value):
     '''Ensure input values for rows are always numeric'''
     if value.isdigit():
         return True
@@ -21,6 +20,9 @@ def askdirectory(text_field):
     source_dirname = filedialog.askdirectory()
     text_field.delete(0, tk.END)
     text_field.insert(0, source_dirname)
+    frow, lrow = row_auto_updater(source_dirname)
+    first_r.insert(0, frow)
+    last_r.insert(0, lrow)
     return source_dirname
 
 def asktarget(text_field):
@@ -41,12 +43,8 @@ def update_Go():
 ###UI Design
 ##Main window creation
 root = tk.Tk()
-root.iconbitmap(os.path.abspath("../assets/icon.ico")) #Custom icon placement
 root.title("RyR Generator")
-background_image = tk.PhotoImage(os.path.abspath("../assets/background.png"))  #Backgrounf image
-background_label = tk.Label(root, image=background_image)
-background_label.place(relwidth=1, relheight=1)  #Fill the entire window
-frame = ttk.Frame(root, width=800, height=600)
+frame = ttk.Frame(root, width=800, height=200)
 frame.grid(column=0, row=0, padx=10, pady=10, sticky="nsew")
 ##Widgets creation
 #Create the button to select the reports folder and the associated text label
@@ -65,14 +63,14 @@ text2.grid(row=3, column=0, padx=50, pady=5)
 validation = root.register(validate_numeric_input)  #Restricts the input value to a number
 label1 = ttk.Label(frame, text="First row:")
 label1.grid(row=4, column=0, padx=50, pady=0)
-first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P'))
 first_r.insert(0, 5)  #Initial Value
 first_r.grid(row=5, column=0, padx=50, pady=5)
 first_r.bind("<KeyRelease>", lambda event: update_frow(event, first_r))  #Bind update of the number with an update function
 
 label2 = ttk.Label(frame, text="Last row:")
 label2.grid(row=6, column=0, padx=50, pady=0)
-last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P'))
 last_r.insert(0, 10)  #Initial Value
 last_r.grid(row=7, column=0, padx=50, pady=5)
 last_r.bind("<KeyRelease>", lambda event: update_lrow(event, last_r))  # Bind update of the number with an update function
@@ -94,4 +92,3 @@ text2.bind("<KeyRelease>", lambda event: update_Go())
 selected_option.trace_add('write', lambda *args: update_Go())  # Dropdown menu using traces
 
 root.mainloop()
-
