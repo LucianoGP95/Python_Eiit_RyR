@@ -9,8 +9,8 @@ class Globals:
     hi_tolerance: float = 0.03
 
 glob = Globals(
-    tooling="PASSAT_B9",
-    leds_per_nest=4,
+    tooling="TOP_PASSAT_B9",
+    leds_per_nest=3,
     tolerance=0.015,
     lo_tolerance=0.02,
     hi_tolerance=0.03
