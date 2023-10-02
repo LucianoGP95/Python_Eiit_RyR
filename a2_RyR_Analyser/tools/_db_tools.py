@@ -54,32 +54,38 @@ class SQLite_Handler:
     def examine_table(self, table_name):
         '''Prints the desired table or tables if given in list or tuple format'''
         if isinstance(table_name, str):
-            print(f"table: {table_name}")
-            cursor = self.conn.cursor()
-            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-            rows = cursor.fetchone()[0]
-            cursor.execute(f"PRAGMA table_info({table_name})")
-            columns = cursor.fetchall()
-            columns = len(columns)
-            print(f"    Rows: {rows}\n    Columns: {columns}")
-            cursor.execute(f"SELECT * FROM {table_name};")
-            rows = cursor.fetchall()
-            for row in rows:
-                print(row)
-        if isinstance(table_name, (list, tuple)):
-            cursor = self.conn.cursor()
-            for i, table in enumerate(table_name):
-                print(f"table {i+1}: {table}")
-                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            try:
+                print(f"table: {table_name}")
+                cursor = self.conn.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
                 rows = cursor.fetchone()[0]
-                cursor.execute(f"PRAGMA table_info({table})")
+                cursor.execute(f"PRAGMA table_info({table_name})")
                 columns = cursor.fetchall()
                 columns = len(columns)
                 print(f"    Rows: {rows}\n    Columns: {columns}")
-                cursor.execute(f"SELECT * FROM {table};")
+                cursor.execute(f"SELECT * FROM {table_name};")
                 rows = cursor.fetchall()
                 for row in rows:
-                    print(f"    {row}")
+                    print(row)
+            except Exception as e:
+                print("Unable to find the table. Ensure it exists in the db with .consult_tables()")
+        if isinstance(table_name, (list, tuple)):
+            try:
+                cursor = self.conn.cursor()
+                for i, table in enumerate(table_name):
+                    print(f"table {i+1}: {table}")
+                    cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                    rows = cursor.fetchone()[0]
+                    cursor.execute(f"PRAGMA table_info({table})")
+                    columns = cursor.fetchall()
+                    columns = len(columns)
+                    print(f"    Rows: {rows}\n    Columns: {columns}")
+                    cursor.execute(f"SELECT * FROM {table};")
+                    rows = cursor.fetchall()
+                    for row in rows:
+                        print(f"    {row}")
+            except Exception as e:
+                print("Unable to find the table. Ensure it exists in the db with .consult_tables()")
 
     def close_conn(self):
         '''Closes the database connection when done'''
@@ -114,7 +120,7 @@ class SQLite_Handler:
             cursor = self.conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';") #Get a list of all tables in the database
             tables = cursor.fetchall()
-            confirmation = input(f"Warning: This action will clear all data from the database {self.db_path}.\tDo you want to continue? (y/n): ").strip().lower()
+            confirmation = input(f"Warning: This action will clear all data from the database {self.db_path}.\nDo you want to continue? (y/n): ").strip().lower()
             if confirmation == 'y':
                 for table in tables: #Loop through the tables and delete them
                     table_name = table[0]
@@ -131,7 +137,6 @@ class SQLite_Data_Extractor(SQLite_Handler):
     from raw data or adds tables to it from raw data'''
     def __init__(self, db_name):
         super().__init__(db_name)  #Calls the parent class constructor
-        self.set_csv_rules() #Sets default rules for csv extraction
         self.source_name = None
 
     def store(self, source):
@@ -217,7 +222,11 @@ class SQLite_Data_Extractor(SQLite_Handler):
 
     def set_csv_rules(self, sep=","):
         '''Used to modify the rules that pandas uses to parse csv files.'''
-        self.sep = sep
+        try:
+            self.sep = sep
+        except Exception as e:
+            print(f"Error changing the rules: {str(e)} \nCurrently supported: Separator")
+        print(f"Updated rules:\nSeparator:{self.sep}")
 
     def rename_table(self, old_name, new_name):
         super().rename_table(old_name, new_name) 
