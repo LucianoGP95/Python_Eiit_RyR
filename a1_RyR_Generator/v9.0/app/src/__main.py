@@ -2,13 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import os
-from _core import nest_number, update_frow, update_lrow
+from _core import nest_number, update_frow, update_lrow, row_auto_updater
 os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script directory
-###Helper functions
+# Helper functions
 source_dirname = ""
 target_dirname = ""
 
-def validate_numeric_input(value): 
+def validate_numeric_input(value): #Unused
     '''Ensure input values for rows are always numeric'''
     if value.isdigit():
         return True
@@ -21,6 +21,9 @@ def askdirectory(text_field):
     source_dirname = filedialog.askdirectory()
     text_field.delete(0, tk.END)
     text_field.insert(0, source_dirname)
+    frow, lrow = row_auto_updater(source_dirname)
+    first_r.insert(0, frow)
+    last_r.insert(0, lrow)
     return source_dirname
 
 def asktarget(text_field):
@@ -65,14 +68,16 @@ text2.grid(row=3, column=0, padx=50, pady=5)
 validation = root.register(validate_numeric_input)  #Restricts the input value to a number
 label1 = ttk.Label(frame, text="First row:")
 label1.grid(row=4, column=0, padx=50, pady=0)
-first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+#first_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+first_r = ttk.Entry(frame, width=5)
 first_r.insert(0, 5)  #Initial Value
 first_r.grid(row=5, column=0, padx=50, pady=5)
 first_r.bind("<KeyRelease>", lambda event: update_frow(event, first_r))  #Bind update of the number with an update function
 
 label2 = ttk.Label(frame, text="Last row:")
 label2.grid(row=6, column=0, padx=50, pady=0)
-last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+#last_r = ttk.Entry(frame, width=5, validate="key", validatecommand=(validation, '%P')) #Conflicts with the automatic row updater
+last_r = ttk.Entry(frame, width=5)
 last_r.insert(0, 10)  #Initial Value
 last_r.grid(row=7, column=0, padx=50, pady=5)
 last_r.bind("<KeyRelease>", lambda event: update_lrow(event, last_r))  # Bind update of the number with an update function

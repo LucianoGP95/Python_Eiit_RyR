@@ -32,6 +32,32 @@ def update_lrow(event, last_r):
         pass
     specific_rows = list(range(frow-1, lrow))
 
+def row_auto_updater(source_dirname):
+    '''Updates the rows and specific rows variables to match the size of the test rows
+    of the first report from the source directory each time new reports are imported'''
+    global frow, lrow, specific_rows
+    file_list = os.listdir(source_dirname)
+    first_file = None
+    for file in file_list:
+        if file.endswith(".csv"):
+            first_file = file
+            break
+    import csv
+    csv_file_path = os.path.join(source_dirname, first_file)
+    csv_data = []
+    with open(csv_file_path, 'r', newline='') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        csv_data = [row[0] for row in csv_reader]
+        for i, row in enumerate(csv_data):
+            ctrl_text = row.split('-')[0].strip()
+            if ctrl_text == "TEST":
+                frow = i+2
+            if ctrl_text == "CTRL":
+                lrow = i
+    specific_rows = list(range(frow, lrow+1))
+    print(specific_rows)
+    return frow, lrow
+
 ##Helper functions
 def nest_filter(source_dirname, substring):
     '''Filters each nest reports by reading a substring in the filename'''
