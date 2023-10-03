@@ -52,7 +52,7 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, fi
         elif isinstance(filter, (int, list, tuple)):
             label = f"{legend_label} {index}"
         elif filter == None:
-            label = None
+            label = f"Guide: {index+1}"
         return label
     #Determine the rows to plot based on the filter
     if filter == 'x':
