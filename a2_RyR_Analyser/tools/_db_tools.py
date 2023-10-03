@@ -1,4 +1,4 @@
-#V5.0 02/10/2023
+#V6.0 03/10/2023
 import pandas as pd
 import sqlite3
 import os
@@ -98,7 +98,7 @@ class SQLite_Handler:
     def reconnect(self, *argv):
         '''Connects to the either the same database or other database. *argv[0] holds the new database name'''
         if argv and len(argv) > 0 and argv[0] is not None: #Checks if the new database was passed as an argument
-            try:
+            try: #Ensures the db was closed
                 self.conn.close() 
             except Exception as e:
                 pass
@@ -106,8 +106,8 @@ class SQLite_Handler:
             self.conn = sqlite3.connect(self.db_path)
             self.cursor = self.conn.cursor()
             print(f"Connected to {self.db_path}")
-        else:
-            try:
+        else: 
+            try: #Ensures the db was closed
                 self.conn.close() 
             except Exception as e:
                 pass
@@ -138,6 +138,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def __init__(self, db_name):
         super().__init__(db_name)  #Calls the parent class constructor
         self.source_name = None
+        self.sep = ","
 
     def store(self, source):
         '''Generates table(s) of the given name using data from different sources'''
@@ -335,14 +336,23 @@ class SQLite_Data_Extractor(SQLite_Handler):
 #
 ###Test script
 if __name__ == '__main__':
-    dbh = SQLite_Data_Extractor("database.db") 
+    #Creates or connects to a db in ../database/
+    dbh = SQLite_Data_Extractor("database.db")
+    #Save a specific file inside ../data/
     dbh.store("data_2.xlsx")
+    #Info of all tables
     dbh.consult_tables()
+    #Show info and the contents of specific tables
     dbh.examine_table(["test1", "test2"])
+    #Rename a table
     dbh.rename_table("test1", "new_test")
-    dbh.retrieve("new_test")
+    #Get a table into a dataframe
+    df = dbh.retrieve("new_test")
+    #Close the connection when done
     dbh.close_conn()
-    
+    #Reconnect to the actual db or a new one
+    dbh.reconnect()
+    #Store the whole ../data/ directory or a custom one
     dbh.store_directory()
     
     ###WARNING zone###
@@ -350,3 +360,4 @@ if __name__ == '__main__':
     dbh.delete_table("new_test")
     #Clear the database
     dbh.clear_database()
+
