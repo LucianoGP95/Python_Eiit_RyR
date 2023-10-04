@@ -1,5 +1,5 @@
-v7.0
+v8.0
 
 -Changed default rows to search in the report
 -ttk migration
--Automatic row detection (It conflicts with the validation function while displaying numbers)
+-Reverted automatic row detection

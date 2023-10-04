@@ -30,7 +30,7 @@ def prepare_database(df, table_name):
     dbh.consult_tables() #Checks results
 
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, filter=None):
-    """ Plots a DataFrame as a scatter plot with optional filtering and customization.
+    ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
         df (DataFrame): The input DataFrame containing the data.
         title (str, optional): The title of the plot.
@@ -43,7 +43,7 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, fi
             - None plots all rows.
             - int, list, or tuple selects specific row(s) based on the provided filter.
     Returns:
-        None """
+        None '''
     i = 0 #Preallocation
     def labeler(filter, i, index):
         '''Small function to correctly label legends'''
@@ -52,7 +52,7 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, fi
         elif isinstance(filter, (int, list, tuple)):
             label = f"{legend_label} {index}"
         elif filter == None:
-            label = f"Guide: {index+1}"
+            label = f"Fiber: {index+1}"
         return label
     #Determine the rows to plot based on the filter
     if filter == 'x':
