@@ -1,0 +1,4 @@
+v8.0
+
+- Complete directory structure redesign
+- Removed auto detect rows feature
