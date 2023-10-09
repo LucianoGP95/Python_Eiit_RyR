@@ -2,7 +2,7 @@
 
 a = Analysis(
     ['src/__main.py', 'src/_core.py', 'src/_filenumber_checker.py'],
-    pathex=['C:\Users\lucio\Desktop\Code\Python_Eiit_RyR\a1_RyR_Generator\v9.0\app'],
+    pathex=[r'C:\Users\lucio\Desktop\Code\Python_Eiit_RyR\a1_RyR_Generator\v9.0\app'],
     binaries=[],
     datas=[
         ('src/help.json', 'src'),               # Include help.json from the src directory
