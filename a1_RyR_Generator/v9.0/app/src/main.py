@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 import json
-from _core import nest_number, update_frow, update_lrow
+from core_logic import nest_number, update_frow, update_lrow
 os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script directory
 ###Global variables
 source_dirname = ""
