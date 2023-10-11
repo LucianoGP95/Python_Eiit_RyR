@@ -10,7 +10,7 @@ source_dirname = ""
 target_dirname = ""
 
 ###json file loading and data extraction
-with open("help.json", "r") as config_file:
+with open("../resources/help.json", "r") as config_file:
     config_data = json.load(config_file)
 APP_VERSION = config_data["version"]
 USAGE_TEXT = config_data["usage"]
