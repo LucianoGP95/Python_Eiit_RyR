@@ -1,1 +1,1 @@
-Awg wire section calculator. Inputs the working conditions and outputs the minimun section to ensure a high enough thermal dissipation for the wire.
+Awg wire section calculator. Inputs the working conditions and outputs the minimun section to ensure a high enough thermal dissipation for the wire. Supports SQLite db and should allow for more wire section standards with little modification.
