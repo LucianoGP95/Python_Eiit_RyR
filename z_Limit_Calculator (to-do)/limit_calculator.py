@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import configparser
 
-limits_path = './Limits/AUDI_Q2_PA.ini'
+limits_path = './Limits/example.ini'
 slope = 2
 
 def limit_import(target_limit, limits_path):
