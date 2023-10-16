@@ -4,11 +4,12 @@ from tkinter import filedialog
 from tkinter import messagebox
 import os
 import json
+import sys
 from core_logic import nest_number, update_frow, update_lrow
 
 #External paths creation
-#os.chdir(os.path.dirname(os.path.abspath(__file__))) #Makes the cwd the script directory
-root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+src_dir = os.path.dirname(os.path.realpath(sys.executable) if getattr(sys, 'frozen', False) else __file__)
+root_path = os.path.dirname(src_dir)
 assets_path = os.path.join(root_path, "assets")
 resources_path = os.path.join(root_path, "resources")
 ###Global variables

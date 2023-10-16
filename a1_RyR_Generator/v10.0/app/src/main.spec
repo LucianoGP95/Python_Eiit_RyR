@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main.py', 'core_logic.py', 'file_number_checker.py'],
+    ['main.py', 'core_logic.py', 'file_number_ckecker.py'],
     pathex=[],
     binaries=[],
     datas=[],
