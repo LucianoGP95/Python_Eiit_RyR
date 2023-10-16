@@ -10,7 +10,7 @@ class Globals:
     hi_tolerance: float = 0.03
 
 glob = Globals(
-    tooling="TOP_PASSAT_B9",
+    tooling="Test",
     leds_per_nest=3,
     x_tolerance=0.0125,
     y_tolerance=0.015,
