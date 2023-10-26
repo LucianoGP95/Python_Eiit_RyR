@@ -1,7 +1,7 @@
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
-from __globals import *
+from __globals import glob
 import sys
 sys.path.append("../tools/")
 import _db_tools as db

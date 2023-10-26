@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class Globals:
     tooling: str = ""
-    leds_per_nest: int = 3
+    lenses_per_nest: int = 3
     x_tolerance: float = 0.0125
     y_tolerance: float = 0.015
     lo_tolerance: float = 0.02
@@ -11,7 +11,7 @@ class Globals:
 
 glob = Globals(
     tooling="Test",
-    leds_per_nest=3,
+    lenses_per_nest=3,
     x_tolerance=0.0125,
     y_tolerance=0.015,
     lo_tolerance=0.02,
