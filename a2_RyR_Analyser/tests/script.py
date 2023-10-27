@@ -1,15 +1,10 @@
 import pandas as pd
 import os
 import sys
-from __globals import glob
-from _utilities import prepare_data, prepare_database
-sys.path.append("../tools/")
-import _db_tools as db #Personal tool for managing sqlite databases in data science
+import db_tools as db #Personal tool for managing sqlite databases in data science
 import os, sys  ####Delete after debugging
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 
-
-def limits_gen_per_position(MEAS, means, x_tolerance, y_tolerance):
+def limits_generators(tolerance, values):
     '''Generate the limit values for a list containing the means in a DataFrame.
     Calculates the total mean for each position and fiber axis and applies it to the
     corresponding rows.'''
@@ -20,7 +15,7 @@ def limits_gen_per_position(MEAS, means, x_tolerance, y_tolerance):
     h = ave + tol / 2
     print(f"high limit: {round(h, 4)}")
     l = ave - tol / 2
-    print(f"llow limit: {round(l, 4)}")
+    print(f"low limit: {round(l, 4)}")
 
 #Data preparation
 dbh = db.SQLite_Data_Extractor("database.db") #Connect to the database
