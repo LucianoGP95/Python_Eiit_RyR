@@ -13,7 +13,6 @@ def limits_gen_per_position(MEAS, means, x_tolerance, y_tolerance):
     '''Generate the limit values for a list containing the means in a DataFrame.
     Calculates the total mean for each position and fiber axis and applies it to the
     corresponding rows.'''
-    limits = pd.DataFrame(columns=["LO_LIMIT", "HI_LIMIT"])
     tol = 0.015
     val = [0.3467, 0.342, 0.3475, 0.3543]
     ave = sum(val)/len(val)
@@ -52,6 +51,4 @@ def mean_calculator_per_position(MEAS, lenses_per_nest):
     print("  Fiber y: ")
     print([round(value, 4) for value in means_fby])
     return means
-
-means = mean_calculator_per_position(MEAS, 3)
 
