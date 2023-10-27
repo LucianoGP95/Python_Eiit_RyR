@@ -1,4 +1,4 @@
-#V10.0 23/10/2023
+#V11.0 27/10/2023
 import pandas as pd
 import sqlite3
 import os
@@ -216,7 +216,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 self.cursor = self.conn.cursor()
                 query = f"SELECT * FROM {table_name}"
                 self.df = pd.read_sql(query, self.conn)
-                print(f"Table {table_name} retrieved succesfully.")
+                print(f"Table *{table_name}* retrieved succesfully.")
                 return self.df
             except Exception as e:
                 print(f"Error retrieving table as dataframe: {str(e)}")
@@ -416,6 +416,9 @@ class SQLite_Backup(SQLite_Handler):
     
     def check_backup(self, db_name):
         '''Quick auto-backup check'''
+        if self.backup_time == -1:
+            print("Backup disabled. Add a valid time amount to start it.")
+            return
         print(f"Backup time period: {self._format_time(self.backup_time)} HH:MM:SS")
         self._auto_backup(db_name)
 
@@ -543,7 +546,7 @@ if __name__ == '__main__':
     bc.manual_backup("database.db")
     #Check for the auto-backup
     bc.check_backup("database.db")
-    #Restore a specific database backup. Requires both names for safety.
+    #Restore a specific database backup. Requires both names input for safety.
     bc.promote("database.db", "database_backup_2023y-10m-20d_11h-58m-01s.db")
     
     ###WARNING zone###
