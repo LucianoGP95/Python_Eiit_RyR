@@ -1,7 +1,9 @@
+import os, sys  ####Delete after debugging
+os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
-from __globals import glob
+from globals import glob
 import sys
 sys.path.append("../tools/")
 import _db_tools as db
@@ -82,7 +84,7 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, fi
 
 #test script
 if __name__ == "__main__":
-    df = prepare_data("../data/target.xlsx", filter="MEAS") #Load the output from RyR_Generator into a df
+    df = prepare_data(os.path.join(os.path.abspath("../data/"), "target.xlsx"), filter="MEAS") #Load the output from RyR_Generator into a df
     prepare_database(df, "PASSAT_B9_TOP") #Store a df inside the database of the project
     dbh = db.SQLite_Data_Extractor("database.db") #Connect to the database
     df = dbh.retrieve("PASSAT_B9_TOP") #Get the desired tooling data 
