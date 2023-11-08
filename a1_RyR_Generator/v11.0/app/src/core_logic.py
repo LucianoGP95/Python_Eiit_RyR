@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.filedialog
 import tkinter.messagebox
-import os
+import os, time
 import openpyxl as opxl #Read and write in xlsx
 import pandas as pd #Import from csv and manipulate data
 import numpy as np
@@ -72,6 +72,14 @@ def compiler_4(Output_S1, Output_S2, Output_S3, Output_S4, target):
     Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
     os.startfile(target) #Opens the file for review
 
+def get_date(time_struct):
+    '''Gets the current date'''
+    min = time_struct.tm_min; sec = time_struct.tm_sec
+    day = time_struct.tm_mday; hour = time_struct.tm_hour
+    year = time_struct.tm_year; month = time_struct.tm_mon
+    current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
+    return current_date_format
+
 ## Main functions
 def nest_number(selected_option, options, source, target, source_dirname):
     '''Determines the workflow of the data extraction for different numbers of nests'''
@@ -125,6 +133,8 @@ def nest_number(selected_option, options, source, target, source_dirname):
     elif selected_option.get() == options[4]: #Implementation for camera testing
         filtered_list = file_filter(source_dirname, "rsl")
         data = data_loader(filtered_list, specific_rows)
-        data.to_excel(target, index=False, startrow=3, startcol=0, header=None)
+        target = os.path.join(target, "Output")
+        target = target + "_" + get_date(time.localtime()) + ".xlsx"
+        data.to_excel(target, index=False, startrow=1, startcol=0, header=None)
         os.startfile(target) #Opens the file for review
 

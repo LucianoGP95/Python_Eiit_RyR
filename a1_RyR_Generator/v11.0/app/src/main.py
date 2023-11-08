@@ -39,9 +39,9 @@ def askdirectory(text_field):
     return source_dirname
 
 def asktarget(text_field):
-    '''Opens a dialog window to select the target excel file'''
+    '''Opens a dialog window to select the target excel file directory'''
     global target_dirname 
-    target_dirname = filedialog.askopenfilename()
+    target_dirname = filedialog.askdirectory()
     text_field.delete(0, tk.END)
     text_field.insert(0, target_dirname)
     return target_dirname
@@ -108,7 +108,7 @@ last_r.grid(row=7, column=0, padx=50, pady=5)
 last_r.bind("<KeyRelease>", lambda event: update_lrow(event, last_r))  # Bind update of the number with an update function
 
 #Create a drop-down list to select the number of nests
-options = ['Select nests', 'All nests', 'Two nests', 'Four nests', 'Camera']
+options = ['Select nests', 'All nests', 'Light Guides: Two nests', 'Light Guides: Four nests', 'Deep Camera']
 selected_option = tk.StringVar()  #Create an instance of the stringVar class that will hold the selected option
 selected_option.set(options[0])  #Set the default option
 combo_box = ttk.Combobox(frame, textvariable=selected_option, values=options)
