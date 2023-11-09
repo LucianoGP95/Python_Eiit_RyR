@@ -4,9 +4,9 @@ import tkinter.messagebox
 import os, time
 import openpyxl as opxl #Read and write in xlsx
 import pandas as pd #Import from csv and manipulate data
-import numpy as np
 import file_number_checker as check
-from intelligent_cameras import *
+from intelligent_cameras import file_filter, data_loader
+from light_guides import *
 
 source_dirname = ""
 target_dirname = ""
@@ -14,73 +14,46 @@ frow = 5
 lrow = 10
 specific_rows = list(range(frow-1, lrow))
 
+##Helper functions
+def get_date() -> str:
+    """Gets the current date in a formatted string.
+    Returns:
+    str: A string representing the current date and time in the format "YYYY-MM-DD_HH-MM-SS"."""
+    current_date = time.localtime()
+    min = current_date.tm_min; sec = current_date.tm_sec
+    day = current_date.tm_mday; hour = current_date.tm_hour
+    year = current_date.tm_year; month = current_date.tm_mon
+    current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
+    return current_date_format
+
+def generate_output(target_folderpath: str, data: pd.DataFrame, start_file=True):
+    """Generates an Excel file from the data and opens it for review.
+    Parameters:
+    - target_folderpath (str): The folder where the Excel file will be saved.
+    - data (pd.DataFrame): The DataFrame to be saved to the Excel file.
+    - start_file (bool, optional): Whether to open the generated file for review. Defaults to True.
+    Returns:
+    None"""
+    target_filepath = os.path.join(target_folderpath, "Data")
+    target_filepath = target_filepath + "_" + get_date() + ".xlsx"
+    data.to_excel(target_filepath, index=False, startrow=0, startcol=0, header=None)
+    if start_file is True:
+        os.startfile(target_filepath)  #Opens the file for review
+
 ##Row updater functions
-def update_frow(event, first_r): 
+def update_frow(event, first_r: int) -> list: 
     '''Refresh the first row selected in the UI'''
     global frow, specific_rows
     frow = int(first_r.get())
     specific_rows = list(range(frow-1, lrow))
     
-def update_lrow(event, last_r): 
+def update_lrow(event, last_r: int) -> list: 
     '''Refresh the last row selected in the UI'''
     global lrow, specific_rows
     lrow = int(last_r.get())
     specific_rows = list(range(frow-1, lrow))
 
-##Helper functions
-def nest_filter(source_dirname, substring):
-    '''Filters each nest reports by reading a substring in the filename'''
-    file_list = os.listdir(source_dirname)
-    filtered_list = [filename for filename in file_list if substring in filename]
-    return filtered_list
-def ndallocator(nest):
-    '''Allocates an empty ndarray of the size needed to hold the values of every nest'''
-    size = enumerate(nest)
-    size = len(list(size))
-    data = np.zeros([len(specific_rows), size])
-    return data
-def writer(nest, data, source_dirname):
-    '''Writes over the array column by column'''
-    for i, filename in enumerate(nest):
-        Source = pd.read_csv(source_dirname + "/" + nest[i], skiprows = lambda x: x not in specific_rows, header=None) #Open the csv and build a Dataframe with the target rows
-        Text = Source.iloc[:, 2] #Indexes the test name column
-        MEAS = np.zeros(len(specific_rows))
-        for j in range(data.shape[0]):
-            try:
-                MEAS[j] = float(Source.iloc[j, 3])
-            except (ValueError, TypeError):
-                MEAS[j] = 0.0
-        lo_limit = Source.iloc[:, 4] #Indexes the low limit value
-        hi_limit = Source.iloc[:, 5] #Indexes the high limit value
-        data[:, i] = MEAS #Writes the column on the array  
-    Output = pd.DataFrame(data) #Makes a new Dataframe with the completed array
-    Output = pd.concat([Text, Output, lo_limit, hi_limit], axis=1)
-    return Output
-def compiler_1(Output_S1, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1])
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review
-def compiler_2(Output_S1, Output_S2, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1, Output_S2], ignore_index=True)
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review
-def compiler_4(Output_S1, Output_S2, Output_S3, Output_S4, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1, Output_S2, Output_S3, Output_S4])
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review
-
-def get_date(time_struct):
-    '''Gets the current date'''
-    min = time_struct.tm_min; sec = time_struct.tm_sec
-    day = time_struct.tm_mday; hour = time_struct.tm_hour
-    year = time_struct.tm_year; month = time_struct.tm_mon
-    current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
-    return current_date_format
-
-## Main functions
+##Main function
 def nest_number(selected_option, options, source, target, source_dirname):
     '''Determines the workflow of the data extraction for different numbers of nests'''
     if selected_option.get() == options[1]: #Nest unspecified. Can be used with PCB testing.
@@ -133,8 +106,5 @@ def nest_number(selected_option, options, source, target, source_dirname):
     elif selected_option.get() == options[4]: #Implementation for camera testing
         filtered_list = file_filter(source_dirname, "rsl")
         data = data_loader(filtered_list, specific_rows)
-        target = os.path.join(target, "Data")
-        target = target + "_" + get_date(time.localtime()) + ".xlsx"
-        data.to_excel(target, index=False, startrow=0, startcol=0, header=None)
-        os.startfile(target) #Opens the file for review
+        generate_output(target, data)
 
