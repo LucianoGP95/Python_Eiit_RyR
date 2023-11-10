@@ -1,11 +1,5 @@
 import os
-import pandas as pd #Import from csv and manipulate data
-
-source_dirname = ""
-target_dirname = ""
-frow = 5
-lrow = 10
-specific_rows = list(range(frow-1, lrow))
+import pandas as pd 
 
 def file_filter(source_dirname: str, extension: str) -> list[str]:
     """Filters filenames in a directory based on a given file extension.

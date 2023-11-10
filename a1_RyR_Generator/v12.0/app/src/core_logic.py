@@ -8,6 +8,7 @@ import file_number_checker as check
 from intelligent_cameras import file_filter, data_loader
 from light_guides import *
 
+##Default values init
 source_dirname = ""
 target_dirname = ""
 frow = 5
@@ -27,18 +28,23 @@ def get_date() -> str:
     return current_date_format
 
 def generate_output(target_folderpath: str, data: pd.DataFrame, start_file=True):
-    """Generates an Excel file from the data and opens it for review.
+    """Generates output files from the data and opens it for review.
     Parameters:
-    - target_folderpath (str): The folder where the Excel file will be saved.
-    - data (pd.DataFrame): The DataFrame to be saved to the Excel file.
+    - target_folderpath (str): The folder where the files will be saved.
+    - data (pd.DataFrame): The DataFrame to be saved.
     - start_file (bool, optional): Whether to open the generated file for review. Defaults to True.
     Returns:
     None"""
-    target_filepath = os.path.join(target_folderpath, "Data")
-    target_filepath = target_filepath + "_" + get_date() + ".xlsx"
-    data.to_excel(target_filepath, index=False, startrow=0, startcol=0, header=None)
-    if start_file is True:
-        os.startfile(target_filepath)  #Opens the file for review
+    target_filepath = os.path.join(target_folderpath, "Data") #Generic filepath
+    target_filepath_csv = target_filepath + "_" + get_date() + ".csv" #csv filepath
+    data.to_csv(target_filepath_csv, index=False, header=None)
+    target_filepath_xlsx = target_filepath + "_" + get_date() + ".xlsx" #xlsx filepath
+    data.to_excel(target_filepath_xlsx, index=False, startrow=0, startcol=0, header=None)
+    if start_file is True: #Condition to open the file
+        try: #Manages trying to open the file in a PC without Excel
+            os.startfile(target_filepath)  #Opens the file for review
+        except OSError as e:
+            print(f"Excel error: {e}")
 
 ##Row updater functions
 def update_frow(event, first_r: int) -> list: 
@@ -57,22 +63,22 @@ def update_lrow(event, last_r: int) -> list:
 def nest_number(selected_option, options, source, target, source_dirname):
     '''Determines the workflow of the data extraction for different numbers of nests'''
     if selected_option.get() == options[1]: #Nest unspecified. Can be used with PCB testing.
-        S1 = nest_filter(source, "S")
-        data = ndallocator(S1)
-        Output = writer(S1, data, source)
+        S = nest_filter(source, "S")
+        data = ndallocator(S, specific_rows)
+        Output = writer(S, data, source, specific_rows)
         Output_S1 = Output
         #Group all the results and write them in target
         compiler_1(Output_S1, target)
     elif selected_option.get() == options[2]: 
         #Nest 1
         S1 = nest_filter(source, "S1")
-        data = ndallocator(S1)
-        Output = writer(S1, data, source)
+        data = ndallocator(S1, specific_rows)
+        Output = writer(S1, data, source, specific_rows)
         Output_S1 = Output
         #Nest 2
         S2 = nest_filter(source, "S2")
-        data = ndallocator(S2)
-        Output = writer(S2, data, source)
+        data = ndallocator(S2, specific_rows)
+        Output = writer(S2, data, source, specific_rows)
         Output_S2 = Output
         #Checks the number of files to ensure two same sized dataframes are concat
         check.check_file_counts_2S(source_dirname)
@@ -81,23 +87,23 @@ def nest_number(selected_option, options, source, target, source_dirname):
     elif selected_option.get() == options[3]:
         #Nest 1
         S1 = nest_filter(source, "S1")
-        data = ndallocator(S1)
-        Output = writer(S1, data, source)
+        data = ndallocator(S1, specific_rows)
+        Output = writer(S1, data, source, specific_rows)
         Output_S1 = Output
         #Nest 2
         S2 = nest_filter(source, "S2")
-        data = ndallocator(S2)
-        Output = writer(S2, data, source)
+        data = ndallocator(S2, specific_rows)
+        Output = writer(S2, data, source, specific_rows)
         Output_S2 = Output
         #Nest 3
         S3 = nest_filter(source, "S3")
-        data = ndallocator(S3)
-        Output = writer(S3, data, source)
+        data = ndallocator(S3, specific_rows)
+        Output = writer(S3, data, source, specific_rows)
         Output_S3 = Output
         #Nest 4
         S4 = nest_filter(source, "S4")
-        data = ndallocator(S4)
-        Output = writer(S4, data, source)
+        data = ndallocator(S4, specific_rows)
+        Output = writer(S4, data, source, specific_rows)
         Output_S4 = Output
         #Checks the number of files to ensure two same sized dataframes are concat
         check.check_file_counts_4S(source_dirname)
