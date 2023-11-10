@@ -1,4 +1,4 @@
 v11.0
 
-- Added intelligent cameras functionality
-- Specific output file with date
+- Data extraction for intelligent cameras functionality.
+- Specific target creation with dates (currently only in cameras)
