@@ -1,17 +1,21 @@
-#V11.0 27/10/2023
+#V12.0 13/11/2023
+import os, json, time
 import pandas as pd
 import sqlite3
-import os
-import time
 from urllib.parse import urlparse
-import json
 import shutil
 #Secondary requirements: pip install openpyxl
 ################################################################################
 class SQLite_Handler:
     '''SQLite custom handler'''
-    def __init__(self, db_name: str):
-        self.db_path: str = os.path.join(os.path.abspath("../database/"), db_name)
+    def __init__(self, db_name: str, rel_path=None):
+        if rel_path == None:
+            self.db_path: str = os.path.join(os.path.abspath("../database/"), db_name)
+        else: #Optional relative path definition
+            try:
+                self.db_path: str = os.path.join(os.path.abspath(rel_path), db_name)
+            except OSError as e:
+                print(f"Error with custom path creation: {e}")
         self.df: pd.DataFrame = None
         self.conn = None
         self.cursor = None
@@ -153,8 +157,8 @@ class SQLite_Handler:
 class SQLite_Data_Extractor(SQLite_Handler):
     '''Extracts structured data from different sources and turns it into a table in a database for quick deployment. Creates a db 
     from raw data or adds tables to it from raw data'''
-    def __init__(self, db_name):
-        super().__init__(db_name)  #Calls the parent class constructor
+    def __init__(self, db_name, rel_path):
+        super().__init__(db_name, rel_path)  #Calls the parent class constructor
         self.source_name = None
         self.sep = ","
 
@@ -346,8 +350,8 @@ class SQLite_Data_Extractor(SQLite_Handler):
 class SQLite_Backup(SQLite_Handler):
     '''Automatic backup generator. Every time it runs it checks for an absolute 
     time condition comparing a .json file data with the specified backup time.'''
-    def __init__(self, db_name, backup_folder=None, backup_time=None):
-        super().__init__(db_name)  #Calls the parent class constructor
+    def __init__(self, db_name, backup_folder=None, backup_time=None, rel_path=None):
+        super().__init__(db_name, rel_path)  #Calls the parent class constructor
         if backup_folder is None: #Predefined path creation
             db_folder = os.path.abspath("../database/")
             self.backup_folder = os.path.join(db_folder, "backup")
@@ -520,7 +524,7 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
-    dbh = SQLite_Data_Extractor("database.db")
+    dbh = SQLite_Data_Extractor("database.db", rel_path=None)
     #Save a specific file inside ../data/
     dbh.store("data_2.xlsx")
     #Info of all tables
