@@ -4,9 +4,10 @@ import tkinter.messagebox
 import os, time
 import openpyxl as opxl #Read and write in xlsx
 import pandas as pd #Import from csv and manipulate data
-import file_number_checker as check
+from file_number_checker import check_file_counts_2S, check_file_counts_4S
 from intelligent_cameras import file_filter, data_loader
 from light_guides import nest_filter, ndallocator, writer
+from database import store_all
 
 ##Default values init
 source_dirname = ""
@@ -16,6 +17,23 @@ lrow = 10
 specific_rows = list(range(frow-1, lrow))
 
 ##Helper functions
+def get_name(source_path: str) -> str:
+    """Gets the name of the tooling by reading the first valid filename in the 
+    input folder. Handles naming problems by giving a generic name.
+    Returns:
+    str: A string representing tooling name that appears in the report."""
+    extension = "csv" #Extension to use. Add more in the future if necessary
+    file_list = [filename for filename in os.listdir(source_path) if filename.endswith(extension)]
+    if not file_list:  #Check if the file list is empty
+        return "Generic_tooling"
+    file_path = os.path.join(source_path, file_list[0])  #Use os.path.join to create the full file path
+    _, filename = os.path.split(file_path)
+    parts = filename.split('_')
+    tooling_name = '_'.join(parts[:-4]) #Slice the parts to remove the last 4 elements
+    if not tooling_name:  # Check if tooling_name is an empty string
+        return "Generic_tooling"
+    return tooling_name
+
 def get_date() -> str:
     """Gets the current date in a formatted string.
     Returns:
@@ -27,7 +45,7 @@ def get_date() -> str:
     current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
     return current_date_format
 
-def generate_output(target_folderpath: str, data: pd.DataFrame, start_file=True):
+def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Generic_tooling", start_file=True):
     """Generates output files from the data and opens it for review.
     Parameters:
     - target_folderpath (str): The folder where the files will be saved.
@@ -35,7 +53,7 @@ def generate_output(target_folderpath: str, data: pd.DataFrame, start_file=True)
     - start_file (bool, optional): Whether to open the generated file for review. Defaults to True.
     Returns:
     None"""
-    target_filepath = os.path.join(os.path.abspath(target_folderpath), "Data") #Generic filepath
+    target_filepath = os.path.join(os.path.abspath(target_folderpath), tooling_name) #Generic filepath
     target_filepath_csv = target_filepath + "_" + get_date() + ".csv" #csv filepath
     data.to_csv(target_filepath_csv, index=False, header=None)
     target_filepath_xlsx = target_filepath + "_" + get_date() + ".xlsx" #xlsx filepath
@@ -67,7 +85,7 @@ def nest_number(selected_option, options, source, target, source_dirname):
         data = ndallocator(S, specific_rows)
         final_output = writer(S, data, source, specific_rows)
         #Group all the results and write them in target
-        generate_output(target, final_output)
+        generate_output(target, final_output, tooling_name=get_name(source))
     elif selected_option.get() == options[2]: #Light guides: 2 nests
         final_output = pd.DataFrame()
         for nest in range(2):
@@ -76,7 +94,7 @@ def nest_number(selected_option, options, source, target, source_dirname):
             output = writer(files, data, source, specific_rows)
             final_output = pd.concat([final_output, output])
         #Checks the number of files to ensure two same sized dataframes are concat
-        check.check_file_counts_2S(source_dirname)
+        check_file_counts_2S(source_dirname)
         #Group all the results and write them in target
         generate_output(target, final_output)
     elif selected_option.get() == options[3]: #Light guides: 4 nests
@@ -87,11 +105,11 @@ def nest_number(selected_option, options, source, target, source_dirname):
             output = writer(files, data, source, specific_rows)
             final_output = pd.concat([final_output, output])
         #Checks the number of files to ensure two same sized dataframes are concat
-        check.check_file_counts_4S(source_dirname)
+        check_file_counts_4S(source_dirname)
         #Group all the results and write them in target
-        generate_output(target, final_output)
+        generate_output(target, final_output, tooling_name=get_name(source))
     elif selected_option.get() == options[4]: #Deep camera
         filtered_list = file_filter(source_dirname, "rsl")
         data = data_loader(filtered_list, specific_rows)
-        generate_output(target, data)
+        generate_output(target, final_output, tooling_name=get_name(source))
 

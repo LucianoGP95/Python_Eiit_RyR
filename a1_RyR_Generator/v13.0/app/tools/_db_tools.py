@@ -1,5 +1,5 @@
 #V12.0 13/11/2023
-import os, json, time
+import os, json, time, re
 import pandas as pd
 import sqlite3
 from urllib.parse import urlparse
@@ -180,7 +180,6 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def store_directory(self, *argv):
         '''Generates table(s) for all the compatible files inside the custom directory. If the directory isn't given it uses 
         ../data/'''
-        print(len(argv))
         if argv and len(argv) > 0:
             try:
                 self.source_path = [argv[0] + name for name in os.listdir(argv[0])]
@@ -295,7 +294,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
         '''Handles all the supported filetypes. Currently supported:
         - .csv
         - .xlsx (Excel)
-        - Aun url pointing to a file of the above'''
+        - An url pointing to a file of the above'''
         self.extension = source.split(".")[-1] #Gets the extension of the file
         match self.extension:
             case "xlsx":
@@ -314,11 +313,15 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def _datasheet_excel(self, i, source):
         '''Specific method for sending .xlsx files with all their sheets as tables in the db'''
         try:
+            source_name, _ = os.path.splitext(self.source_name)
             print(f'Data from {source} has been imported to {self.db_path}.')
             print(f"Sheet(s) imported to db as table(s) with name(s):")
             for sheet_name, sheet in self.df.items():
-                table_name = sheet_name
-                if not sheet_name.isalnum(): #Ensures all tables always have legal characters (letters and numbers)
+                if len(self.df.items()) == 1: #Name for single sheet excels
+                    table_name = re.sub(r'\W', '_', source_name) #Replace non-alphanumeric characters with underscores in table_name
+                else:
+                    table_name = re.sub(r'\W', '_', sheet_name) #Replace non-alphanumeric characters with underscores in table_name
+                if not table_name[0].isalpha() and table_name[0] != '_': #Ensure the table_name starts with a letter or underscore
                     table_name = f"table{i+1}"
                     print(f"Invalid table name for sheet: {sheet_name}, adding it as table{i+1}")
                 print(f"    {table_name}")
@@ -526,7 +529,7 @@ if __name__ == '__main__':
     #Creates or connects to a db in ../database/
     dbh = SQLite_Data_Extractor("database.db", rel_path=None)
     #Save a specific file inside ../data/
-    dbh.store("data_2.xlsx")
+    dbh.store("PASSAT_B9_2023y-11m-13d_15h-59m-35s.xlsx")
     #Info of all tables
     dbh.consult_tables()
     #Show info and the contents of specific tables
