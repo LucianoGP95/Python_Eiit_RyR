@@ -86,7 +86,7 @@ text1 = ttk.Entry(frame, width=100)
 text1.grid(row=1, column=0, padx=50, pady=5)
 
 #Create the button to select the target file and the associated text label
-button2 = ttk.Button(frame, text='Target file', command=lambda: asktarget(text2))
+button2 = ttk.Button(frame, text='Results folder', command=lambda: asktarget(text2))
 button2.grid(row=2, column=0, padx=5, pady=5)
 text2 = ttk.Entry(frame, width=100)
 text2.grid(row=3, column=0, padx=50, pady=5)
