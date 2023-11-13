@@ -1,10 +1,8 @@
+import os, json, sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
-import os
-import json
-import sys
 from core_logic import nest_number, update_frow, update_lrow
 
 #External paths creation

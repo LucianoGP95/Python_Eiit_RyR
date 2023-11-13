@@ -68,49 +68,29 @@ def nest_number(selected_option, options, source, target, source_dirname):
         final_output = writer(S, data, source, specific_rows)
         #Group all the results and write them in target
         generate_output(target, final_output)
-    elif selected_option.get() == options[2]: 
-        #Nest 1
-        S1 = nest_filter(source, "S1")
-        data = ndallocator(S1, specific_rows)
-        Output = writer(S1, data, source, specific_rows)
-        Output_S1 = Output
-        #Nest 2
-        S2 = nest_filter(source, "S2")
-        data = ndallocator(S2, specific_rows)
-        Output = writer(S2, data, source, specific_rows)
-        Output_S2 = Output
+    elif selected_option.get() == options[2]: #Light guides: 2 nests
+        final_output = pd.DataFrame()
+        for nest in range(2):
+            files = nest_filter(source, f"S{nest+1}")
+            data = ndallocator(files, specific_rows)
+            output = writer(files, data, source, specific_rows)
+            final_output = pd.concat([final_output, output])
         #Checks the number of files to ensure two same sized dataframes are concat
         check.check_file_counts_2S(source_dirname)
         #Group all the results and write them in target
-        final_output = pd.concat([Output_S1, Output_S2])
         generate_output(target, final_output)
-    elif selected_option.get() == options[3]:
-        #Nest 1
-        S1_files = nest_filter(source, "S1")
-        data = ndallocator(S1_files, specific_rows)
-        Output = writer(S1_files, data, source, specific_rows)
-        Output_S1 = Output
-        #Nest 2
-        S2_files = nest_filter(source, "S2")
-        data = ndallocator(S2_files, specific_rows)
-        Output = writer(S2_files, data, source, specific_rows)
-        Output_S2 = Output
-        #Nest 3
-        S3_files = nest_filter(source, "S3")
-        data = ndallocator(S3_files, specific_rows)
-        Output = writer(S3_files, data, source, specific_rows)
-        Output_S3 = Output
-        #Nest 4
-        S4_files = nest_filter(source, "S4")
-        data = ndallocator(S4_files, specific_rows)
-        Output = writer(S4_files, data, source, specific_rows)
-        Output_S4 = Output
+    elif selected_option.get() == options[3]: #Light guides: 4 nests
+        final_output = pd.DataFrame()
+        for nest in range(4):
+            files = nest_filter(source, f"S{nest+1}")
+            data = ndallocator(files, specific_rows)
+            output = writer(files, data, source, specific_rows)
+            final_output = pd.concat([final_output, output])
         #Checks the number of files to ensure two same sized dataframes are concat
         check.check_file_counts_4S(source_dirname)
         #Group all the results and write them in target
-        final_output = pd.concat([Output_S1, Output_S2, Output_S3, Output_S4])
         generate_output(target, final_output)
-    elif selected_option.get() == options[4]: #Implementation for camera testing
+    elif selected_option.get() == options[4]: #Deep camera
         filtered_list = file_filter(source_dirname, "rsl")
         data = data_loader(filtered_list, specific_rows)
         generate_output(target, data)
