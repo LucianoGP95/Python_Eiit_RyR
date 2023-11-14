@@ -1,5 +1,3 @@
-import os, sys  ####Delete after debugging
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 import os, sys
 sys.path.append(os.path.abspath("../tools"))
 import _db_tools as dbt
