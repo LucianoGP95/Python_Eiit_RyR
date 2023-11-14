@@ -8,8 +8,10 @@ import sys
 sys.path.append("../tools/")
 import _db_tools as db
 
+dbh = db.SQLite_Data_Extractor("database.db") #Allows for database management
+
 #Helper functions
-def prepare_data(target, filter=None):
+def prepare_data(target: (str, list[str]), filter=None):
     '''Prepares the output data by extracting the measures in a df and storing them in the database.
     Per default gets the measures and it can be used to get the limits'''
     data = pd.read_excel(target) #Import the RyR generator output
@@ -25,11 +27,26 @@ def prepare_data(target, filter=None):
     df.columns = range(df.shape[1]) #Reset columns index
     return df
 
-def prepare_database(df, table_name):
+def prepare_database(db_name, df, table_name):
     '''Prepares the database from a ready-to-store df and returns the same df, getting it from the db'''
-    dbh = db.SQLite_Data_Extractor("database.db") #Allows for database management
+    dbh.reconnect(db_name)
     dbh.store_df(df, table_name) #Store the dataframe in the connected database
+    dbh.close_conn()
+
+def consult_database(db_name):
+    dbh.reconnect(db_name)
     dbh.consult_tables() #Checks results
+    dbh.close_conn()
+
+def clear_database(db_name):
+    dbh.reconnect(db_name)
+    dbh.clear_database()
+    dbh.close_conn() 
+
+def retrieve_data(db_name):
+    dbh.reconnect(db_name)
+    dbh.clear_database()
+    dbh.close_conn() 
 
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, legend_label=None, filter=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.

@@ -1,18 +1,22 @@
-#V11.0 27/10/2023
+#V13.0 14/11/2023
+import os, json, time, re, sys
 import pandas as pd
 import sqlite3
-import os
-import time
 from urllib.parse import urlparse
-import json
 import shutil
 #Secondary requirements: pip install openpyxl
 ################################################################################
 class SQLite_Handler:
     '''SQLite custom handler'''
-    def __init__(self, db_name):
-        self.db_path = os.path.join(os.path.abspath("../database/"), db_name)
-        self.df = None
+    def __init__(self, db_name: str, rel_path=None):
+        if rel_path == None:
+            self.db_path: str = os.path.join(os.path.abspath("../database/"), db_name)
+        else: #Optional relative path definition
+            try:
+                self.db_path: str = os.path.join(os.path.abspath(rel_path), db_name)
+            except OSError as e:
+                print(f"Error with custom path creation: {e}")
+        self.df: pd.DataFrame = None
         self.conn = None
         self.cursor = None
         self.conn = sqlite3.connect(self.db_path) #Preventive connection/creation to the database
@@ -22,7 +26,7 @@ class SQLite_Handler:
         else: 
             print(f"Database *{db_name}* found in: {self.db_path}")
 
-    def rename_table(self, old_name, new_name):
+    def rename_table(self, old_name: str, new_name: str):
         try:
             self.cursor.execute(f"ALTER TABLE {old_name} RENAME TO {new_name};")
             self.conn.commit()
@@ -30,7 +34,7 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while renaming table: {str(e)}")
 
-    def delete_table(self, table_name):
+    def delete_table(self, table_name: str):
         try:
             print(f"Warning: This action will drop the table {table_name}.")
             confirmation = input("Do you want to continue? (y/n): ").strip().lower()
@@ -45,7 +49,7 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while deleting table: {str(e)}")
 
-    def delete_row(self, row_name, table_name):
+    def delete_row(self, row_name: str, table_name: str):
         '''Drops row(s) from the desired table'''
         row_name = self._input_handler(row_name)
         try:
@@ -76,7 +80,7 @@ class SQLite_Handler:
         for table in tables:
             print(f"    {table[0]}")
 
-    def examine_table(self, table_name):
+    def examine_table(self, table_name: str):
         '''Prints the desired table or tables if given in list or tuple format'''
         table_name = self._input_handler(table_name)
         try:
@@ -110,17 +114,22 @@ class SQLite_Handler:
         except Exception as e:
             print(f"Error clearing the database: {str(e)}")
 
-    def reconnect(self, *argv):
-        '''Connects to the either the same database or other database. *argv[0] holds the new database name'''
-        if argv and len(argv) > 0 and argv[0] is not None: #Checks if the new database was passed as an argument
-            self.db_path = os.path.join(os.path.abspath("../database"), argv[0])            
-        try: #Ensures the db was closed
-            self.conn.close() 
+    def reconnect(self, database, rel_path=None):
+        '''Connects to either the same database or another database.'''
+        old_db_path = self.db_path
+        if rel_path is not None:  #Check if a new relative path was provided
+            self.db_path = os.path.join(os.path.abspath(rel_path), database)
+        try:
+            self.conn.close()  #Ensure the database is closed
         except Exception:
             pass
-        self.conn = sqlite3.connect(self.db_path)
-        self.cursor = self.conn.cursor()
-        print(f"Connected to {self.db_path}")
+        try:
+            self.conn = sqlite3.connect(self.db_path)
+            self.cursor = self.conn.cursor()
+            print(f"Connected to {self.db_path}")
+        except Exception as e:
+            print(f"Error trying to connect: {e}")
+            self.db_path = old_db_path #Returns to the last valid path
 
     def clear_database(self):
         try:
@@ -134,7 +143,7 @@ class SQLite_Handler:
                     table_name = table[0]
                     cursor.execute(f"DROP TABLE IF EXISTS {table_name};")
                 self.conn.commit()
-                print("Database cleared successfully.")
+                print(f"Database *{file}* cleared successfully.")
             else:
                 print("Operation canceled.")
         except Exception as e:
@@ -153,8 +162,8 @@ class SQLite_Handler:
 class SQLite_Data_Extractor(SQLite_Handler):
     '''Extracts structured data from different sources and turns it into a table in a database for quick deployment. Creates a db 
     from raw data or adds tables to it from raw data'''
-    def __init__(self, db_name):
-        super().__init__(db_name)  #Calls the parent class constructor
+    def __init__(self, db_name, rel_path=None):
+        super().__init__(db_name, rel_path)  #Calls the parent class constructor
         self.source_name = None
         self.sep = ","
 
@@ -173,40 +182,61 @@ class SQLite_Data_Extractor(SQLite_Handler):
         except Exception as e:
             pass
 
-    def store_directory(self, *argv):
-        '''Generates table(s) for all the compatible files inside the custom directory. If the directory isn't given it uses 
+    def store_directory(self, input_rel_path=None):
+        '''Generates table(s) for all the compatible files inside the custom directory. If the directory isn't given, it uses 
         ../data/'''
-        print(len(argv))
-        if argv and len(argv) > 0:
-            try:
-                self.source_path = [argv[0] + name for name in os.listdir(argv[0])]
+        if input_rel_path:
+            try: #Check if the directory exists, and create it if it doesn't
+                directory_path = os.path.abspath(input_rel_path)
+                if not os.path.exists(directory_path):
+                    os.makedirs(directory_path)
+                self.source_path = [os.path.join(directory_path, name) for name in os.listdir(directory_path)]
             except Exception as e:
-                print("    Unrecognized directory. Using default one.")
+                print(f"Error creating or accessing custom directory '{directory_path}': {e}")
+                print("    The operation has been canceled.")
+                sys.exit(1)
         else:
-            try: #Avoids errors if there isn't a "../data" path in the project
-                self.source_path = ["../data/" + name for name in os.listdir("../data/")]
+            default_directory = os.path.abspath("../data/")
+            try: #Check if the default directory exists, and create it if it doesn't
+                if not os.path.exists(default_directory):
+                    os.makedirs(default_directory)
+                self.source_path = [os.path.join(default_directory, name) for name in os.listdir(default_directory)]
             except Exception as e:
-                print("    No ../data/ directory, aborting operation")
+                print(f"Error creating or accessing default directory '{default_directory}': {e}")
+                print("    The operation has been canceled.")
+                sys.exit(1)
         for i, source in enumerate(self.source_path):
-            self._filetypehandler(source) #Handles the filetype
+            self.source_name = source
+            self._filetypehandler(source)  #Handles the filetype
             if self.extension == "xlsx":
                 self._datasheet_excel(i, source)
             if self.extension == "csv":
                 self._datasheet_csv(i, source)
-        try: #Incase there is a problem with the parent method
+        try:  
             self.consult_tables()
-        except Exception as e:
+        except Exception as e: #In case there is a problem with the parent method
             pass
 
-    def store_df(self, df, table_name):
+    def store_df(self, df, table_name=None):
         '''Stores the desired dataframe as a table in the connected database.'''
-        try:
-            self.df = df
-            self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
-            self.conn.commit()
-            print(f"Dataframe stored as *{table_name}*")
-        except Exception as e:
-            print(f"Error storing the dataframe: {str(e)}")
+        if table_name is not None:
+            try:
+                table_name = re.sub(r'\W', '_', table_name) #Replace non-alphanumeric characters with underscores in table_name
+                self.df = df
+                self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
+                self.conn.commit()
+                print(f"Dataframe stored as *{table_name}*")
+            except Exception as e:
+                print(f"Error storing the dataframe: {str(e)}")
+        else: 
+            try:
+                table_name = f"Exported_df"
+                self.df = df
+                self.df.to_sql(table_name, self.conn, if_exists='fail', index=False)
+                self.conn.commit()
+                print(f"Dataframe stored as *{table_name}*")
+            except Exception as e:
+                print(f"Error storing the dataframe: {str(e)}\n Try adding the parameter table_name.")
 
     def retrieve(self, table_name):
         '''Retrieves a table from the database as a dataframe object. If the arg. is a list or tuple it will try to concatenate
@@ -291,7 +321,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
         '''Handles all the supported filetypes. Currently supported:
         - .csv
         - .xlsx (Excel)
-        - Aun url pointing to a file of the above'''
+        - An url pointing to a file of the above'''
         self.extension = source.split(".")[-1] #Gets the extension of the file
         match self.extension:
             case "xlsx":
@@ -310,13 +340,20 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def _datasheet_excel(self, i, source):
         '''Specific method for sending .xlsx files with all their sheets as tables in the db'''
         try:
-            print(f'Data from {source} has been imported to {self.db_path}.')
+            _, source_name = os.path.split(self.source_name)
+            source_name, _ = os.path.splitext(source_name)
+            print(f'Data from *{source_name}* has been imported to {self.db_path}')
             print(f"Sheet(s) imported to db as table(s) with name(s):")
+            j = 0
             for sheet_name, sheet in self.df.items():
-                table_name = sheet_name
-                if not sheet_name.isalnum(): #Ensures all tables always have legal characters (letters and numbers)
-                    table_name = f"table{i+1}"
-                    print(f"Invalid table name for sheet: {sheet_name}, adding it as table{i+1}")
+                j += 1
+                if len(self.df.items()) == 1: #Name for single sheet excels
+                    table_name = re.sub(r'\W', '_', source_name) #Replace non-alphanumeric characters with underscores in table_name
+                else:
+                    table_name = re.sub(r'\W', '_', sheet_name) #Replace non-alphanumeric characters with underscores in table_name
+                if not table_name[0].isalpha() and table_name[0] != '_': #Ensure the table_name starts with a letter or underscore
+                    table_name = f"xlsx_table{j}"
+                    print(f"Invalid table name for sheet: *{sheet_name}*. Adding it as *{table_name}*")
                 print(f"    {table_name}")
                 sheet.to_sql(table_name, self.conn, if_exists='replace', index=False)
         except Exception as e:
@@ -325,11 +362,14 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def _datasheet_csv(self, i, source):
         '''Specific method for sending .csv files as tables in the db'''
         try:
-            table_name = source.split(".")[-2].split("/")[-1]
-            if not table_name.isalnum(): #Ensures all tables always have legal characters (letters and numbers)
-                table_name = f"table{i+1}"
-                print(f"Invalid table name: Adding it as table{i+1}")
-            print(f'Data from {source} has been imported to {self.db_path}.')
+            _, source_name = os.path.split(self.source_name)
+            source_name, _ = os.path.splitext(source_name)
+            #table_name = source.split(".")[-2].split("/")[-1]
+            table_name = re.sub(r'\W', '_', source_name) #Replace non-alphanumeric characters with underscores in table_name
+            if not table_name[0].isalpha() and table_name[0] != '_': #Ensure the table_name starts with a letter or underscore
+                table_name = f"csv_table{i+1}"
+                print(f"Invalid table name: *{table_name}*. Adding it as *csv_table{i+1}*")
+            print(f'Data from *{source_name}* has been imported to {self.db_path}.')
             print(f"    {table_name}")
             self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
         except Exception as e:
@@ -346,8 +386,8 @@ class SQLite_Data_Extractor(SQLite_Handler):
 class SQLite_Backup(SQLite_Handler):
     '''Automatic backup generator. Every time it runs it checks for an absolute 
     time condition comparing a .json file data with the specified backup time.'''
-    def __init__(self, db_name, backup_folder=None, backup_time=None):
-        super().__init__(db_name)  #Calls the parent class constructor
+    def __init__(self, db_name, backup_folder=None, backup_time=None, rel_path=None):
+        super().__init__(db_name, rel_path)  #Calls the parent class constructor
         if backup_folder is None: #Predefined path creation
             db_folder = os.path.abspath("../database/")
             self.backup_folder = os.path.join(db_folder, "backup")
@@ -355,7 +395,7 @@ class SQLite_Backup(SQLite_Handler):
             self.backup_folder = os.path.realpath(backup_folder)
         print(f"Backup path: {self.backup_folder}")
         self.date, self.date_format = self._get_date(time.localtime())
-        print(f"Current time: {self.date_format}")
+        print(f"    Current time: {self.date_format}")
         name_without_extension, _ = os.path.splitext(db_name)
         name = name_without_extension + ".json"
         self.json_path = os.path.join(self.backup_folder, name) #Default json name
@@ -392,16 +432,18 @@ class SQLite_Backup(SQLite_Handler):
             with open(self.json_path, "w") as json_file:
                 json.dump(data, json_file) #Write the data to the JSON file
             print(f"Checkpoint *{filename}* created for *{database}* at *{self.date_format}*")
-            self._backup(db_name=name)
 
     def manual_backup(self, db_name=None):
         '''Creates a manual backup by overwritting the json'''
         _, db_path = self._build_paths(db_name)
         _, name = os.path.split(db_path)
-        with open(self.json_path, "r") as json_file:
-            data = json.load(json_file)
-            database = data["database"]
-            filename = data["filename"]
+        try:
+            with open(self.json_path, "r") as json_file:
+                data = json.load(json_file)
+                database = data["database"]
+                filename = data["filename"]
+        except Exception as e:
+            print(f"Error loading checkpoint: {e}")
         self.date, self.date_format = self._get_date(time.localtime())
         data = { #json data creation
             "database": database,
@@ -416,13 +458,22 @@ class SQLite_Backup(SQLite_Handler):
     
     def check_backup(self, db_name):
         '''Quick auto-backup check'''
+        _, db_path = self._build_paths(db_name) 
+        folder_path, name = os.path.split(db_path)
+        name_without_extension, _ = os.path.splitext(name)
+        filename = name_without_extension + ".json"
+        json_folder = os.path.join(folder_path, "backup")
+        json_path = os.path.join(json_folder, filename)
+        if not os.path.exists(json_path): #Creates a checkpoint if it doesn't exist yet.
+            print(f"No checkpoint found: Creating *{filename}*")
+            self.create_checkpoint(db_name)
         if self.backup_time == -1:
             print("Backup disabled. Add a valid time amount to start it.")
             return
         print(f"Backup time period: {self._format_time(self.backup_time)} HH:MM:SS")
         self._auto_backup(db_name)
 
-    def promote(self, db_name=None, backup_name=None):
+    def promote(self, db_name=None, backup_name=None): #####Bugged
         '''Restores the desired backup. Will destroy the specified database to replace.'''
         if db_name is None:
             raise ValueError("No main db defined")
@@ -452,7 +503,7 @@ class SQLite_Backup(SQLite_Handler):
                 self._backup(db_name=db_name)
                 print(f"Auto-Backup created at {current_date_format}")
             else:
-                print(f"Time to next backup: {self._format_time(left_to_backup)}")
+                print(f"Time to next backup: {self._format_time(left_to_backup)} HH:MM:SS")
         except:
             print("Auto-backup failed. Check if a ckeckpoint for the db is created.")
 
@@ -520,9 +571,9 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
-    dbh = SQLite_Data_Extractor("database.db")
+    dbh = SQLite_Data_Extractor("database.db", rel_path=None)
     #Save a specific file inside ../data/
-    dbh.store("data_2.xlsx")
+    dbh.store("PASSAT_B9_2023y-11m-13d_15h-59m-35s.xlsx")
     #Info of all tables
     dbh.consult_tables()
     #Show info and the contents of specific tables
