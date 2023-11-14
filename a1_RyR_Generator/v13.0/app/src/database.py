@@ -1,12 +1,40 @@
+import os, sys  ####Delete after debugging
+os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 import os, sys
 sys.path.append(os.path.abspath("../tools"))
 import _db_tools as dbt
 
-dbh = dbt.SQLite_Data_Extractor("RyR_data.db", rel_path="../../5_database")
+RyR_data = dbt.SQLite_Data_Extractor("RyR_data.db", rel_path="../../5_Database")
+RyR_backup = dbt.SQLite_Backup("RyR_data.db", rel_path="../../5_Database", backup_folder="../../5_Database/backup", backup_time=86400)
 
-def store_all(directory):
-    dbh.reconnect("RyR_data.db")
-    dbh.store(directory)
-    dbh.close_conn()
+def do_backup(db_name):
+    RyR_backup.reconnect(db_name)
+    RyR_backup.manual_backup()
+    RyR_backup.close_conn()
 
-store_all("3_Results")
+def store_actual(df_name, db_name, data):
+    do_backup(db_name)
+    RyR_data.reconnect(db_name)
+    RyR_data.store_df(data, table_name=df_name)
+    RyR_data.close_conn()
+
+def store_all(db_name, input_directory):
+    do_backup(db_name)
+    RyR_data.reconnect(db_name)
+    RyR_data.store_directory(input_rel_path=input_directory)
+    RyR_data.close_conn()
+
+def generate_checkpoint(db_name):
+    RyR_backup.reconnect(db_name)
+    RyR_backup.create_checkpoint()
+    RyR_backup.close_conn()
+
+#Test script
+if __name__ == "__main__":
+    store_all("../../3_Results")
+
+    RyR_data.consult_tables()
+
+    RyR_data.clear_database()
+    
+    RyR_backup.check_backup("RyR_data.db")
