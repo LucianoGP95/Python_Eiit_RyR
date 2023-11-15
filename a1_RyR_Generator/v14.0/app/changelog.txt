@@ -1,5 +1,6 @@
 v13.0
 
-- SQLite integration
-- Custom naming of the RyR files using the tooling name
+- Default paths to speed deploy. The don't appear in the entries.
+    - Source: 1_Place_Reports_Here
+    - Target: 3_Results
 

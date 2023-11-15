@@ -10,8 +10,8 @@ from light_guides import nest_filter, ndallocator, writer
 from database import store_all, store_actual
 
 ##Default values init
-source_dirname = ""
-target_dirname = ""
+source_dirname = os.path.abspath("../../1_Place_Reports_Here")
+target_dirname = os.path.abspath("../../3_results")
 frow = 5
 lrow = 10
 specific_rows = list(range(frow-1, lrow))
