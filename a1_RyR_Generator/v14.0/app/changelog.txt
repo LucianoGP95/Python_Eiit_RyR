@@ -1,0 +1,5 @@
+v13.0
+
+- SQLite integration
+- Custom naming of the RyR files using the tooling name
+
