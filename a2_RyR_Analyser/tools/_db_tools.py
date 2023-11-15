@@ -1,4 +1,4 @@
-#V13.0 14/11/2023
+#V14.0 15/11/2023
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -26,13 +26,19 @@ class SQLite_Handler:
         else: 
             print(f"Database *{db_name}* found in: {self.db_path}")
 
-    def rename_table(self, old_name: str, new_name: str):
+    def rename_table(self, old_name: str, new_name: str, verbose=True):
+        old_name = re.sub(r'\W', '_', old_name) #To avoid illegal symbols
+        new_name = re.sub(r'\W', '_', new_name)
         try:
             self.cursor.execute(f"ALTER TABLE {old_name} RENAME TO {new_name};")
             self.conn.commit()
-            print(f"Table *{old_name}* renamed to *{new_name}*")
-        except Exception as e:
-            raise Exception(f"Error while renaming table: {str(e)}")
+            print(f"Table *{old_name}* renamed to *{new_name}*") if verbose else None
+        except sqlite3.OperationalError as e:
+            error_message = str(e)
+            if "there is already another table" in error_message:
+                print(f"Table *{new_name}* already exists. Skipping renaming.") if verbose else None
+            else:
+                raise Exception(f"Error while renaming table: {error_message}")
 
     def delete_table(self, table_name: str):
         try:
@@ -70,15 +76,20 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while deleting table: {str(e)}")
 
-    def consult_tables(self):
-        '''Shows all the tables in the database'''
+    def consult_tables(self, filter=None):
+        '''Shows all the tables in the database. Allows for filtering.'''
         cursor = self.conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        _, file = os.path.split(self.db_path)
-        print(f"{file} actual contents:")
+        if filter:  #First, filters by the full name
+            tables = [table[0] for table in cursor.fetchall() if filter.lower() in table[0].lower()]
+            if not tables: #If not successful, filters by initial string
+                tables = [table[0] for table in cursor.fetchall() if table[0].lower().startswith(filter.lower())]
+        else:
+            tables = [table[0] for table in cursor.fetchall()]
+        _, db_name = os.path.split(self.db_path)
+        print(f"*{db_name}* actual contents:")
         for table in tables:
-            print(f"    {table[0]}")
+            print(f"    {table}")
 
     def examine_table(self, table_name: str):
         '''Prints the desired table or tables if given in list or tuple format'''
@@ -106,15 +117,15 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while examining tables: {(e)}")
 
-    def close_conn(self):
+    def close_conn(self, verbose=True):
         '''Closes the database connection when done'''
         try:
             self.conn.close()  
-            print(f"Closed connection to: {self.db_path}")
+            print(f"Closed connection to: {self.db_path}") if verbose else None
         except Exception as e:
             print(f"Error clearing the database: {str(e)}")
 
-    def reconnect(self, database, rel_path=None):
+    def reconnect(self, database, rel_path=None, verbose=True):
         '''Connects to either the same database or another database.'''
         old_db_path = self.db_path
         if rel_path is not None:  #Check if a new relative path was provided
@@ -126,7 +137,7 @@ class SQLite_Handler:
         try:
             self.conn = sqlite3.connect(self.db_path)
             self.cursor = self.conn.cursor()
-            print(f"Connected to {self.db_path}")
+            print(f"Connected to {self.db_path}") if verbose else None
         except Exception as e:
             print(f"Error trying to connect: {e}")
             self.db_path = old_db_path #Returns to the last valid path
@@ -277,9 +288,6 @@ class SQLite_Data_Extractor(SQLite_Handler):
             print(f"Error changing the rules: {str(e)} \nCurrently supported: Separator")
         print(f"Updated rules:\nSeparator:{self.sep}")
 
-    def rename_table(self, old_name, new_name):
-        super().rename_table(old_name, new_name) 
-
     def delete_table(self, table_name):
         super().delete_table(table_name)  
 
@@ -288,12 +296,6 @@ class SQLite_Data_Extractor(SQLite_Handler):
 
     def examine_table(self, table_name):
         super().examine_table(table_name) 
-
-    def close_conn(self):
-        super().close_conn()  
-
-    def reconnect(self, *argv):
-        super().reconnect(*argv) 
 
     def clear_database(self):
         super().clear_database() 
