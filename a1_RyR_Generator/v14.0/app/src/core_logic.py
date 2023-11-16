@@ -66,8 +66,6 @@ def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Ge
     - start_file (bool, optional): Whether to open the generated file for review. Defaults to True.
     Returns:
     None"""
-    print(data)
-    print(data.shape)
     target_filepath = os.path.join(os.path.abspath(target_folderpath), tooling_name) #Generic filepath
     target_filepath_csv = target_filepath + "_" + get_date() + ".csv" #csv filepath
     data.to_csv(target_filepath_csv, index=False, header=None)
