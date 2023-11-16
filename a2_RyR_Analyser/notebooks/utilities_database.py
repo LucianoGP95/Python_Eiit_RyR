@@ -1,10 +1,6 @@
-import os, sys, time  ####Delete after debugging
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
+import os, sys, time
 import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
 from globals import glob
-import sys
 sys.path.append("../tools/")
 import _db_tools as db
 
@@ -21,12 +17,22 @@ def select_database(db_name):
     else: 
         raise ValueError("Unsupported database")
 
-def prepare_database(db_name, df, table_name):
-    '''Prepares the database from a ready-to-store df and returns the same df, getting it from the db'''
+def prepare_database(db_name, df, table_name, extra_term=None) -> str:
+    '''Prepares the database from a ready-to-store df and returns the table name, getting it from the db'''
     select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
+    if extra_term is not None and isinstance(extra_term, str): #Renames files with the extra term 
+        old_name = table_name
+        parts = old_name.split("_")
+        first_part = parts[:-6]
+        date = parts[-6:]
+        table_name = first_part + [extra_term] + date
+        new_name = "_".join(table_name)
+        dbh.rename_table(old_name, new_name, verbose=False)
+        table_name = new_name
     dbh.store_df(df, table_name) #Store the dataframe in the connected database
     dbh.close_conn(verbose=False)
+    return table_name
 
 def consult_database(db_name):
     select_database(db_name)
@@ -46,6 +52,12 @@ def retrieve_data(db_name, table_name):
     df = dbh.retrieve(table_name)
     dbh.close_conn(verbose=False) 
     return df
+
+def rename_table(db_name, old_name, new_name, extra_term=None):
+    select_database(db_name)
+    dbh.reconnect(db_name, verbose=False)
+    dbh.rename_table(old_name, new_name, verbose=False)
+    dbh.close_conn(verbose=False) 
 
 def prepare_data(target: (str, list[str]), filter=None):
     '''Prepares the output data by extracting the measures in a df and storing them in the database.
@@ -96,70 +108,8 @@ def get_date() -> str:
     current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
     return current_date_format
 
-def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None):
-    ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
-    Parameters:
-        df (DataFrame): The input DataFrame containing the data.
-        title (str, optional): The title of the plot.
-        xlabel (str, optional): The label for the x-axis.
-        ylabel (str, optional): The label for the y-axis.
-        legend_label (str, optional): The label for the legend.
-        filter (str, int, list, tuple, optional): Filter for selecting specific data points.
-            - 'x' plots rows with odd indices.
-            - 'y' plots rows with even indices.
-            - None plots all rows.
-            - int, list, or tuple selects specific row(s) based on the provided filter.
-    Returns:
-        None '''
-    i = 0 #Preallocation
-    if filter is not None:
-        filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
-    def labeler(filter, index, j, k):
-        '''Small function to correctly label legends'''
-        if filter in ["X", "Y"]:
-            axis = filter
-            label = f"Guia_Luz_Blanco_FB{k}_{axis}"
-        elif isinstance(filter, (list, tuple)):
-            axis = "Y" if filter[k-1] % 2 == 0 else "X"
-            #Calculate exact number of fiber in future
-            label = f"Guia_Luz_Blanco_FB_{'placeholder'}{axis}"
-        elif filter == None:
-            axis = "X" if index % 2 == 0 else "Y"
-            label = f"Guia_Luz_Blanco_FB{j}_{axis}"
-        return label
-    #Determine the rows to plot based on the filter
-    if filter == 'X':
-        rows_to_plot = df.iloc[1::2] #Rows with odd indices
-    elif filter == 'Y':
-        rows_to_plot = df.iloc[::2]  #Rows with even indices
-    elif filter is None:
-        rows_to_plot = df #All rows
-    elif isinstance(filter, (int)):
-        filter = [filter]
-        rows_to_plot = df.iloc[filter]
-    elif isinstance(filter, (list, tuple)):
-        rows_to_plot = df.iloc[filter]
-    j = 0; k = 0
-    for index, row in rows_to_plot.iterrows(): #Plot the selected rows
-        j += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
-        k += 1
-        plt.scatter(
-            list(range(1, df.shape[1] + 1)),
-            row,
-            label=labeler(filter, index, j, k)
-        )
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.show()
-
 #test script
 if __name__ == "__main__":
-    table_names = ['TOP_PASSAT_B9_2023y_11m_14d_17h_21m_03s', 'TOP_PASSAT_B9_limits_2023y_11m_14d_17h_21m_03s']
-    measurements = retrieve_data("database.db", table_names[0])
-    limits = retrieve_data("database.db", table_names[1])
-    plot_scatter(measurements, title='Scatter Plot, fiber X', xlabel='test', ylabel='MEAS', filter=23)
     df = prepare_data(os.path.join(os.path.abspath("../data/"), "target.xlsx"), filter="MEAS") #Load the output from RyR_Generator into a df
     prepare_database(df, "PASSAT_B9_TOP") #Store a df inside the database of the project
     dbh = db.SQLite_Data_Extractor("database.db") #Connect to the database

@@ -9,10 +9,6 @@ class Globals:
     lo_tolerance: float = 0.02 #General lower limit allowed tolerance
     hi_tolerance: float = 0.03 #General upper limit allowed tolerance
 
-@dataclass
-class GlobalsExchange:
-    _table_names: list[str] = "" 
-
 glob = Globals(
     tooling="TOP_Passat_B9",
     lenses_per_nest=3,
