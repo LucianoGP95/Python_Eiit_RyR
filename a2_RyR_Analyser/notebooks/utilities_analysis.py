@@ -54,7 +54,7 @@ def mean_calculator(measures: pd.DataFrame, lenses_per_nest=None) -> list[float]
         print([round(value, 4) for value in means_fby])
     return means
 
-def limits_gen(measurements: pd.DataFrame, means: list, lenses_per_nest = None) -> pd.DataFrame:
+def limits_gen(measurements: pd.DataFrame, means: list, lenses_per_nest=None) -> pd.DataFrame:
     '''Generate the limit values for a list containing the means in a DataFrame.
     Calculates the total mean for each fiber axis and applies it to the corresponding rows.
     Parameters:
@@ -166,7 +166,7 @@ def qualitative_evaluation(df: pd.DataFrame) -> pd.DataFrame:
     pass_df.reset_index(drop=True, inplace=True)
     return pass_df
 
-def z_score_filter(df: pd.DataFrame, threshold: int) -> pd.DataFrame:
+def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     """Applies a z-score filter to a DataFrame, removing values that do not meet the specified threshold.
     Parameters:
     - df (pd.DataFrame): The input DataFrame containing the measurements and limits.
