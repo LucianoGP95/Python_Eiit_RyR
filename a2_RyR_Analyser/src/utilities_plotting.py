@@ -1,5 +1,4 @@
 import pandas as pd
-from globals import glob
 import matplotlib.pyplot as plt
 
 ####Helper Functions####

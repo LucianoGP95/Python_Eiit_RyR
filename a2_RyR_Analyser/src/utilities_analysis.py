@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from globals import glob
 import configparser
 import matplotlib.pyplot as plt
 

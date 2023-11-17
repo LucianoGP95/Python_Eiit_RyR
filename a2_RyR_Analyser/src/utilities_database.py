@@ -1,6 +1,6 @@
 import os, sys, time
 import pandas as pd
-from globals import glob
+from main import glob
 import _db_tools as db
 
 ###Script
