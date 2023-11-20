@@ -31,11 +31,16 @@ def consult_database(db_name: str):
     dbh.consult_tables()
     dbh.close_conn(verbose=False)
 
-def clear_database(db_name: str):
-    _select_database(db_name)
-    dbh.reconnect(db_name, verbose=False)
-    dbh.clear_database()
-    dbh.close_conn(verbose=False) 
+def clear_databases(db_name: list[str]):
+    '''Clears the specified databases'''
+    db_name = [db_name] if isinstance(db_name,str) else db_name #Handle strings input
+    confirmation = input(f"Warning: This action will clear all data from the databasesy.\nDo you want to continue? (y/n): ").strip().lower()
+    if confirmation == 'y':
+        for database in db_name:
+            _select_database(database)
+            dbh.reconnect(database, verbose=False)
+            dbh.clear_database(override=True)
+        dbh.close_conn(verbose=False) 
 
 def retrieve_data(db_name: str, table_name: str) -> pd.DataFrame:
     _select_database(db_name)
@@ -101,6 +106,15 @@ def get_date() -> str:
     current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
     return current_date_format
 
+def get_sigma(sigma):
+    dbhs = db.SQLite_Data_Extractor("sigma_values.db")
+    dbhs.reconnect("sigma_values.db", verbose=False)
+    dbhs.cursor.execute("""SELECT "Value" FROM sigma WHERE "Sigma" >= ?;""", (sigma,))
+    result = dbhs.cursor.fetchone()[0]
+    dbhs.close_conn(verbose=False)
+    print(result) 
+    return result
+
 ###Hidden functions
 def _select_database(db_name):
     '''Selects the desired database to work with based of their names'''
@@ -113,8 +127,10 @@ def _select_database(db_name):
         raise ValueError("Unsupported database")
 
 ###test script
-if __name__ == "__main__":
+""" if __name__ == "__main__":
     df = prepare_data(os.path.join(os.path.abspath("../data/"), "target.xlsx"), filter="MEAS") #Load the output from RyR_Generator into a df
     prepare_database(df, glob.tooling) #Store a df inside the database of the project
     dbh = db.SQLite_Data_Extractor("database.db") #Connect to the database
-    df = dbh.retrieve(glob.tooling) #Get the desired tooling data 
+    df = dbh.retrieve(glob.tooling) #Get the desired tooling data
+    get_sigma(4)
+    clear_databases(["input.db", "output.db"]) """

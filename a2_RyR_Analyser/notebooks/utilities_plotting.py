@@ -2,7 +2,7 @@ import pandas as pd
 from globals import glob
 import matplotlib.pyplot as plt
 
-####Helper Functions####
+###Helper Functions
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
@@ -18,7 +18,6 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
             - int, list, or tuple selects specific row(s) based on the provided filter.
     Returns:
         None '''
-    i = 0 #Preallocation
     if filter is not None:
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
@@ -61,8 +60,7 @@ def labeler(index, j, k, fibers=None):
         label = f"Guia_Luz_Blanco_FB{k}_{axis}"
     elif isinstance(fibers, (list, tuple)):
         axis = "Y" if fibers[k-1] % 2 == 0 else "X"
-        #Calculate exact number of fiber in future
-        label = f"Guia_Luz_Blanco_FB_{k}"
+        label = f"Fiber: {fibers[k-1]+1}"
     elif fibers == None:
         axis = "X" if index % 2 == 0 else "Y"
         label = f"Guia_Luz_Blanco_FB{j}_{axis}"
@@ -71,11 +69,22 @@ def labeler(index, j, k, fibers=None):
 def draw_limits(fibers, limits):
     '''Small function to draw limits'''
     if limits is not None and isinstance(limits, pd.DataFrame):
+        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
         try:
-            for fiber in fibers:
+            for i, fiber in enumerate(fibers):
+                color1 = colors[i * 2 % len(colors)] if i < len(colors) else "orange"
+                color2 = colors[(i * 2 + 1) % len(colors)] if i < len(colors) else "purple"
                 lo_limit = limits.iloc[fiber, 0]
                 hi_limit = limits.iloc[fiber, 1]
-            plt.axhline(y=lo_limit, color='r', linestyle='--', label='Low limit')
-            plt.axhline(y=hi_limit, color='b', linestyle='--', label='High limit')
+                plt.axhline(y=lo_limit, color=color1, linestyle='--', label=f'Low limit: {fiber+1}')
+                plt.axhline(y=hi_limit, color=color2, linestyle='--', label=f'High limit: {fiber+1}')
         except Exception as e:
             print(f"Error adding limits: {e}")
+
+if __name__ == '__main__':
+    import os, sys  ####Delete after debugging
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
+    import utilities_database as db
+    measurements = db.retrieve_data("input.db", "TOP_PASSAT_B9_2023y_11m_14d_17h_21m_03s")
+    limits = db.retrieve_data("input.db", "TOP_PASSAT_B9_limits_2023y_11m_14d_17h_21m_03s")
+    plot_scatter(measurements, title='Scatter Plot, specific fiber(s)', xlabel='test', ylabel='MEAS', filter=[19, 20, 21], limits=limits)

@@ -1,4 +1,4 @@
-#V14.0 15/11/2023
+#V15.0 20/11/2023
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -39,6 +39,17 @@ class SQLite_Handler:
                 print(f"Table *{new_name}* already exists. Skipping renaming.") if verbose else None
             else:
                 raise Exception(f"Error while renaming table: {error_message}")
+
+    def rename_column(self, table_name, old_name, new_name, verbose=True):
+        try:
+            quoted_table_name = f'"{table_name}"'
+            quoted_old_name = f'"{old_name}"'
+            quoted_new_name = f'"{new_name}"'
+            self.cursor.execute(f"ALTER TABLE {quoted_table_name} RENAME COLUMN {quoted_old_name} TO {quoted_new_name};")
+            self.conn.commit()
+            print(f"Table *{table_name}* renamed from *{old_name}* to *{new_name}*") if verbose == True else None
+        except Exception as e:
+            print(f"Error renaming column: {e}")
 
     def delete_table(self, table_name: str):
         try:
@@ -142,13 +153,16 @@ class SQLite_Handler:
             print(f"Error trying to connect: {e}")
             self.db_path = old_db_path #Returns to the last valid path
 
-    def clear_database(self):
+    def clear_database(self, override=False):
         try:
             cursor = self.conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';") #Get a list of all tables in the database
             tables = cursor.fetchall()
             _, file = os.path.split(self.db_path)
-            confirmation = input(f"Warning: This action will clear all data from the database {file}.\nDo you want to continue? (y/n): ").strip().lower()
+            if override == False: #Override confirmation to dispatch multiple databases (WARNING, abstract a confirmation check to a superior level) 
+                confirmation = input(f"Warning: This action will clear all data from the database {file}.\nDo you want to continue? (y/n): ").strip().lower()
+            else:
+                confirmation = "y"
             if confirmation == 'y':
                 for table in tables: #Loop through the tables and delete them
                     table_name = table[0]
@@ -296,9 +310,6 @@ class SQLite_Data_Extractor(SQLite_Handler):
 
     def examine_table(self, table_name):
         super().examine_table(table_name) 
-
-    def clear_database(self):
-        super().clear_database() 
 
     '''Internal methods'''
     def _inputhandler(self):
@@ -573,13 +584,13 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
-    dbh = SQLite_Data_Extractor("database.db", rel_path=None)
+    dbh = SQLite_Data_Extractor("sigma_values.db", rel_path=None)
     #Save a specific file inside ../data/
-    dbh.store("PASSAT_B9_2023y-11m-13d_15h-59m-35s.xlsx")
+    dbh.store("sigma.csv")
     #Info of all tables
     dbh.consult_tables()
     #Show info and the contents of specific tables
-    dbh.examine_table(["test1", "test2"])
+    dbh.examine_table(["sigma"])
     #Rename a table
     dbh.rename_table("test1", "new_test")
     #Get a table into a dataframe
