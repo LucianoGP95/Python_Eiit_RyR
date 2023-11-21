@@ -31,9 +31,9 @@ def mean_calculator(measures: pd.DataFrame, lenses_per_nest=None) -> list[float]
         abs_mean_fbx = sum(means_fbx) / len(means_fbx)
         abs_mean_fby = sum(means_fby) / len(means_fby)
         means = [abs_mean_fbx, abs_mean_fby]
-        print("Means (fbx and fby):") 
-        print("Fiber x: " + str(round(abs_mean_fbx, 4)))
-        print("Fiber y: " + str(round(abs_mean_fby, 4)))
+        #print("Means (fbx and fby):") 
+        #print("Fiber x: " + str(round(abs_mean_fbx, 4)))
+        #print("Fiber y: " + str(round(abs_mean_fby, 4)))
     else: #Calculates specific means for each position for fbx and fby
         for index in range(lenses_per_nest*2):
             if index % 2 == 0:
@@ -47,11 +47,11 @@ def mean_calculator(measures: pd.DataFrame, lenses_per_nest=None) -> list[float]
                 abs_mean_fby = sum(mean_fby) / len(mean_fby)
                 means_fby.append(abs_mean_fby)
         means = means_fbx + means_fby
-        print("Means per position (from lower to higher):") 
-        print("  Fiber x: ")
-        print([round(value, 4) for value in means_fbx])
-        print("  Fiber y: ")
-        print([round(value, 4) for value in means_fby])
+        #print("Means per position (from lower to higher):") 
+        #print("  Fiber x: ")
+        #print([round(value, 4) for value in means_fbx])
+        #print("  Fiber y: ")
+        #print([round(value, 4) for value in means_fby])
     return means
 
 def limits_gen(measurements: pd.DataFrame, means: list, lenses_per_nest=None) -> pd.DataFrame:

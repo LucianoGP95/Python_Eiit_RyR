@@ -1,8 +1,5 @@
-import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 
-# Generate a list of colors in the format ['r', 'g', 'b', ...]
-colors = list(plt.cm.colors.cnames.keys())
-
-# Example usage:
-print(colors)  # Print the first 10 colors in the list
+# Creating a DataFrame with a single float value using a list
+df = pd.DataFrame([3.14], columns=['Column_Name'])
+print(df)

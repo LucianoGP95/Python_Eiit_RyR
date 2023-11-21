@@ -106,13 +106,13 @@ def get_date() -> str:
     current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
     return current_date_format
 
-def get_sigma(sigma):
+def get_sigma(sigma, verbose=False):
     dbhs = db.SQLite_Data_Extractor("sigma_values.db")
     dbhs.reconnect("sigma_values.db", verbose=False)
     dbhs.cursor.execute("""SELECT "Value" FROM sigma WHERE "Sigma" >= ?;""", (sigma,))
     result = dbhs.cursor.fetchone()[0]
     dbhs.close_conn(verbose=False)
-    print(result) 
+    print("sigma value: " + str(result)) if verbose == True else None
     return result
 
 ###Hidden functions
