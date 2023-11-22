@@ -1,0 +1,6 @@
+v13.0
+
+- Default paths to speed deploy.
+    - Source: 1_Place_Reports_Here
+    - Target: 3_Results
+
