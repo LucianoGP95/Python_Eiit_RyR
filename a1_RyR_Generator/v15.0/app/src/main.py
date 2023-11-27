@@ -1,8 +1,11 @@
+import os, sys  ####Delete after debugging
+os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 import os, json, sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
+from configuration import add_format, close_window
 from core_logic import nest_number, update_frow, update_lrow
 from custom_entry_widget import CustomEntryWidget as cEntry
 
@@ -53,6 +56,10 @@ def update_Go():
     else:
         button3.configure(state='disabled')
 
+def configuration_menu():
+    conf.deiconify() #Makes the file selector window visible
+    conf.grab_set() #Freezes all windows except file selector one
+
 def show_version():
     messagebox.showinfo("Version", APP_VERSION)
 
@@ -60,7 +67,7 @@ def show_usage():
     messagebox.showinfo("Usage", USAGE_TEXT)
 
 ###UI Design
-##Main window creation
+##Windows creation
 root = tk.Tk()
 root.iconbitmap(os.path.join(assets_path, "icon.ico")) #Custom icon placement
 root.title("RyR Generator")
@@ -69,14 +76,33 @@ background_label = tk.Label(root, image=background_image)
 background_label.place(relwidth=1, relheight=1)  #Fill the entire window
 frame = ttk.Frame(root, width=800, height=600)
 frame.grid(column=0, row=0, padx=10, pady=10, sticky="nsew")
+conf = tk.Toplevel(root)
+conf.title("Configuration")
+conf.iconbitmap(os.path.join(assets_path, "icon.ico")) #Custom icon placement
+conf_frame = ttk.Frame(conf)
+conf_frame.grid(column=0, row=0, padx=10, pady=10, sticky="nsew")
+conf.withdraw()
+conf.protocol("WM_DELETE_WINDOW", lambda: close_window(conf)) #Behaviour for X button
+
+##Configuration window widgets creation
+format_check = tk.BooleanVar()
+checkbox = ttk.Checkbutton(conf_frame, text="Add format to output file.", variable=format_check, command=lambda: add_format(format_check))
+checkbox.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+label = ttk.Label(conf_frame, text="Add format to output file.")
+label.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+conf_button_1 = ttk.Button(conf_frame, text='Close window', command=lambda: close_window(conf))
+conf_button_1.grid(row=3, column=0, padx=5, pady=5)
 
 ##Top bar menu creation
 menu = tk.Menu(root)
 root.config(menu=menu)
 about_menu = tk.Menu(menu)
+about_menu_2 = tk.Menu(menu)
 menu.add_cascade(label="Help", menu=about_menu)
+menu.add_cascade(label="Options", menu=about_menu_2)
 about_menu.add_command(label="Usage", command=show_usage)
 about_menu.add_command(label="About", command=show_version)
+about_menu_2.add_command(label="Configuration", command=configuration_menu)
 
 ##Widgets creation
 #Create the button to select the reports folder and the associated text label

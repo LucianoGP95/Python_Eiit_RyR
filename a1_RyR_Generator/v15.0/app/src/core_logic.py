@@ -49,13 +49,10 @@ def format_output(df: pd.DataFrame) -> pd.DataFrame:
     """Gives a correct format to the output"""
     columns_number = df.shape[1]
     df.columns = range(columns_number)  #Resets columns
-    new_column_names = { #Create a dictionary for renaming
-        0: "Guía de luz", 
-        columns_number - 2: "LO_LIMIT", 
-        columns_number - 1: "HI_LIMIT"
-    }
-    df.rename(columns=new_column_names, inplace=True)
     df.reset_index(drop=True, inplace=True) #Reset index
+    text_row = ["Test item"] + [f"Test: {index}" for index in range(1, df.shape[1]-2)] + ["LO_LIMIT"] + ["HI_LIMIT"]
+    text_row_df = pd.DataFrame([text_row], columns=df.columns)
+    df = pd.concat([text_row_df, df], ignore_index=True)
     return df
 
 def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Generic_tooling", start_file=True):
@@ -70,7 +67,7 @@ def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Ge
     target_filepath_csv = target_filepath + "_" + get_date() + ".csv" #csv filepath
     data.to_csv(target_filepath_csv, index=False, header=None)
     target_filepath_xlsx = target_filepath + "_" + get_date() + ".xlsx" #xlsx filepath
-    data.to_excel(target_filepath_xlsx, index=False, startrow=3, startcol=0, header=None)
+    data.to_excel(target_filepath_xlsx, startrow=3, startcol=0, index=False, header=None)
     if start_file is True: #Condition to open the file
         try: #Manages trying to open the file in a PC without Excel
             os.startfile(target_filepath_xlsx)  #Opens the file for review
@@ -123,6 +120,7 @@ def nest_number(selected_option, options, source, target, source_dirname):
         data = data_loader(filtered_list, specific_rows)
     df_name = get_name(source) + "_" + get_date()
     formatted_output = format_output(final_output) #Gives a correct format to the output
-    generate_output(target, formatted_output, tooling_name=get_name(source)) #Generates the output files
     store_actual(df_name, "RyR_data.db", formatted_output) #Saves the RyR dataframe in the db
+    generate_output(target, formatted_output, tooling_name=get_name(source)) #Generates the output files
+
 
