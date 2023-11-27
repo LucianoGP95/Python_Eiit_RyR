@@ -30,8 +30,16 @@ def data_loader(filtered_list: list[str], specific_rows: list) -> pd.DataFrame:
     index_array = pd.DataFrame(index_array, columns=['Index'])
     data = data.reset_index(drop=True)
     index_array = index_array.reset_index(drop=True)
-    data = pd.concat([index_array, data], axis=1)
-    test_number_array = ["Test point"] + [f"Test Number: {index}" for index in range(1, data.shape[1])]
-    test_number_array = pd.DataFrame([test_number_array], columns=data.columns)
-    data = pd.concat([test_number_array, data], ignore_index=True)
-    return data
+    output = pd.concat([index_array, data], axis=1)
+    #test_number_array = ["Test point"] + [f"Test Number: {index}" for index in range(1, data.shape[1])]
+    #test_number_array = pd.DataFrame([test_number_array], columns=data.columns)
+    #data = pd.concat([test_number_array, data], ignore_index=True)
+    print(output)
+    return output
+
+if __name__ == "__main__":
+    source_dirname = r"C:\Users\luciano.galan\Desktop\Code\Python_Eiit_RyR\a1_RyR_Generator\v15.0\1_Place_Reports_Here"
+    extension = "rsl"
+    specific_rows = list(range(4, 10))
+    filtered_list = file_filter(source_dirname, extension)
+    data_loader(filtered_list, specific_rows)

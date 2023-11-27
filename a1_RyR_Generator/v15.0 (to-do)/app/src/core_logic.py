@@ -8,6 +8,7 @@ from file_number_checker import check_file_counts_2S, check_file_counts_4S
 from intelligent_cameras import file_filter, data_loader
 from light_guides import nest_filter, ndallocator, writer
 from database import store_all, store_actual
+from analysis import generate_RyR
 
 ##Default values init
 source_dirname = os.path.abspath("../../1_Place_Reports_Here")
@@ -45,14 +46,18 @@ def get_date() -> str:
     current_date_format = f"{year}y-{month:02d}m-{day:02d}d_{hour}h-{min:02d}m-{sec:02d}s"
     return current_date_format
 
-def format_output(df: pd.DataFrame) -> pd.DataFrame:
-    """Gives a correct format to the output"""
+def format_output(df: pd.DataFrame, format_check: tk.BooleanVar) -> pd.DataFrame:
+    """Gives a correct format to the output and optionally generates an analysis"""
     columns_number = df.shape[1]
     df.columns = range(columns_number)  #Resets columns
     df.reset_index(drop=True, inplace=True) #Reset index
     text_row = ["Test item"] + [f"Test: {index}" for index in range(1, df.shape[1]-2)] + ["LO_LIMIT"] + ["HI_LIMIT"]
     text_row_df = pd.DataFrame([text_row], columns=df.columns)
     df = pd.concat([text_row_df, df], ignore_index=True)
+    if format_check == True:
+        generate_RyR(df)
+    else:
+        pass
     return df
 
 def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Generic_tooling", start_file=True):
@@ -73,6 +78,9 @@ def generate_output(target_folderpath: str, data: pd.DataFrame, tooling_name="Ge
             os.startfile(target_filepath_xlsx)  #Opens the file for review
         except OSError as e:
             print(f"Excel error: {e}")
+
+def use_variable(variable):
+    print(f"The variable from the main script is: {variable}")
 
 ##Row updater functions
 def update_frow(event, first_r: int) -> list: 
@@ -119,7 +127,8 @@ def nest_number(selected_option, options, source, target, source_dirname):
         filtered_list = file_filter(source_dirname, "rsl")
         data = data_loader(filtered_list, specific_rows)
     df_name = get_name(source) + "_" + get_date()
-    formatted_output = format_output(final_output) #Gives a correct format to the output
+    from main import format_check
+    formatted_output = format_output(final_output, format_check) #Gives a correct format to the output
     store_actual(df_name, "RyR_data.db", formatted_output) #Saves the RyR dataframe in the db
     generate_output(target, formatted_output, tooling_name=get_name(source)) #Generates the output files
 

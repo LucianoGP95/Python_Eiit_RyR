@@ -71,9 +71,9 @@ def show_usage():
 root = tk.Tk()
 root.iconbitmap(os.path.join(assets_path, "icon.ico")) #Custom icon placement
 root.title("RyR Generator")
-background_image = tk.PhotoImage(os.path.join(assets_path, "background.png"))  #Background image
-background_label = tk.Label(root, image=background_image)
-background_label.place(relwidth=1, relheight=1)  #Fill the entire window
+#background_image = tk.PhotoImage(os.path.join(assets_path, "background.png"))  #Background image
+#background_label = tk.Label(root, image=background_image)
+#background_label.place(relwidth=1, relheight=1)  #Fill the entire window
 frame = ttk.Frame(root, width=800, height=600)
 frame.grid(column=0, row=0, padx=10, pady=10, sticky="nsew")
 conf = tk.Toplevel(root)
@@ -88,9 +88,7 @@ conf.protocol("WM_DELETE_WINDOW", lambda: close_window(conf)) #Behaviour for X b
 format_check = tk.BooleanVar()
 checkbox = ttk.Checkbutton(conf_frame, text="Add format to output file.", variable=format_check, command=lambda: add_format(format_check))
 checkbox.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
-label = ttk.Label(conf_frame, text="Add format to output file.")
-label.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
-conf_button_1 = ttk.Button(conf_frame, text='Close window', command=lambda: close_window(conf))
+conf_button_1 = ttk.Button(conf_frame, text='Accept and close window', command=lambda: close_window(conf))
 conf_button_1.grid(row=3, column=0, padx=5, pady=5)
 
 ##Top bar menu creation
