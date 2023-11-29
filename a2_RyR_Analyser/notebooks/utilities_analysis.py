@@ -190,8 +190,42 @@ def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     filtered_df = pd.concat([filtered_df, limits], axis=1)  #Adds back the columns
     return filtered_df
 
+def plot_capability(measurements, analysis_table, label, sigma):
+    ''''Plot a histogram with the values of a single fiber'''
+    row = measurements.loc[label]
+    mean = analysis_table.loc[label]["mean"]
+    plt.hist(row.values, bins=30, edgecolor='black', alpha=0.7)
+    try:
+        low_limit = analysis_table.loc[label]['LO_LIMIT']
+        high_limit = analysis_table.loc[label]['HI_LIMIT']
+    except:
+        low_limit = analysis_table.loc[label]['LSL']
+        high_limit = analysis_table.loc[label]['USL']
+    limits = [low_limit, high_limit]  # Replace with the positions where you want to draw lines
+    for index, limit in enumerate(limits):
+        legend_label = "Low Specification Level: " if index==0 else "High Specification Level: "
+        plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{limit}")
+    plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Average: {round(mean, 4)}")
+    cal_low_limit = analysis_table.loc[label]['CAL_LO_LIMIT']
+    cal_high_limit = analysis_table.loc[label]['CAL_HI_LIMIT']
+    cal_limits = [cal_low_limit, cal_high_limit]  # Replace with the positions where you want to draw lines
+    for index, cal_limit in enumerate(cal_limits):
+        legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
+        plt.axvline(cal_limit, color='blue', linestyle='dashed', linewidth=2, label=f"{legend_label}{cal_limit}")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.xlabel('Values')
+    plt.ylabel('Frequency')
+    plt.title(f'Values for: {label} (Sigma: {sigma})')
+    plt.show()
+
+def reset_df(df: pd.DataFrame) -> pd.DataFrame:
+    df_2 = df.reset_index(drop=True)
+    df_2.columns = [str(i) for i in range(df_2.shape[1])]
+    return df_2
+
 #Test script
 if __name__ == '__main__':
-    df = pd.read_excel(r"C:\Users\luciano.galan\Desktop\Code\Python_Eiit_RyR\a2_RyR_Analyser\a2_output\TOP_Passat_B9_2023y-11m-16d_11h-10m-21s.xlsx")
-    RyRdf = RyR(df)
-    RyRdf
+    import os
+    data = pd.read_excel(os.path.join(os.path.abspath("../a1_input"), "TOP_PASSAT_B9_2023y-11m-14d_17h-21m-03s.xlsx")) #Import the RyR generator output
+    df = data.iloc[2:, 1:].reset_index(drop=True) #Slices measures and limits
+    MEAS = reset_df(df.iloc[:, :-2])
