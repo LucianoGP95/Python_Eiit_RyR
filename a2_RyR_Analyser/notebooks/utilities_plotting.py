@@ -2,7 +2,7 @@ import pandas as pd
 from globals import glob
 import matplotlib.pyplot as plt
 
-###Helper Functions
+###Main Functions
 def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
@@ -32,11 +32,11 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
     elif isinstance(filter, int):  #Fiber specified by integer
         fibers = [x - 1 for x in [filter]]  #Get the correct index
         rows_to_plot = df.iloc[fibers]
-        draw_limits(fibers, limits)
+        _draw_limits(fibers, limits)
     elif isinstance(filter, (list, tuple)):  #Fiber specified by sequence of integers
         fibers = [x - 1 for x in filter] #Get the correct index
         rows_to_plot = df.iloc[fibers]
-        draw_limits(fibers, limits)
+        _draw_limits(fibers, limits)
     j = 0
     k = 0
     for index, row in rows_to_plot.iterrows():  #Plot the selected rows
@@ -45,7 +45,7 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
         plt.scatter(
             list(range(1, df.shape[1] + 1)),
             row,
-            label=labeler(index, j, k, fibers=fibers)
+            label=_labeler(index, j, k, fibers=fibers)
         )
     plt.title(title)
     plt.xlabel(xlabel)
@@ -53,7 +53,36 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.show()
 
-def labeler(index, j, k, fibers=None):
+def plot_capability(measurements, analysis_table, label, sigma):
+    ''''Plot a histogram with the values of a single fiber'''
+    row = measurements.loc[label]
+    mean = analysis_table.loc[label]["mean"]
+    plt.hist(row.values, bins=30, edgecolor='black', alpha=0.7)
+    try:
+        low_limit = analysis_table.loc[label]['LO_LIMIT']
+        high_limit = analysis_table.loc[label]['HI_LIMIT']
+    except:
+        low_limit = analysis_table.loc[label]['LSL']
+        high_limit = analysis_table.loc[label]['USL']
+    limits = [low_limit, high_limit]  # Replace with the positions where you want to draw lines
+    for index, limit in enumerate(limits):
+        legend_label = "Low Specification Level: " if index==0 else "High Specification Level: "
+        plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{round(limit, 4)}")
+    plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Average: {round(mean, 4)}")
+    cal_low_limit = analysis_table.loc[label]['CAL_LO_LIMIT']
+    cal_high_limit = analysis_table.loc[label]['CAL_HI_LIMIT']
+    cal_limits = [cal_low_limit, cal_high_limit]  # Replace with the positions where you want to draw lines
+    for index, cal_limit in enumerate(cal_limits):
+        legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
+        plt.axvline(cal_limit, color='blue', linestyle='dashed', linewidth=2, label=f"{legend_label}{cal_limit}")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.xlabel('Values')
+    plt.ylabel('Frequency')
+    plt.title(f'Values for: {label} (Sigma: {sigma})')
+    plt.show()
+
+###Helper Functions
+def _labeler(index, j, k, fibers=None):
     '''Small function to correctly label legends'''
     if fibers in ["X", "Y"]:
         axis = fibers
@@ -66,7 +95,7 @@ def labeler(index, j, k, fibers=None):
         label = f"Guia_Luz_Blanco_FB{j}_{axis}"
     return label
 
-def draw_limits(fibers, limits):
+def _draw_limits(fibers, limits):
     '''Small function to draw limits'''
     if limits is not None and isinstance(limits, pd.DataFrame):
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -81,6 +110,7 @@ def draw_limits(fibers, limits):
         except Exception as e:
             print(f"Error adding limits: {e}")
 
+###Test Script
 if __name__ == '__main__':
     import os, sys  ####Delete after debugging
     os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
