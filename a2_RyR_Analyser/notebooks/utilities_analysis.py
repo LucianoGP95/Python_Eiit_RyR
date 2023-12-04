@@ -5,54 +5,68 @@ import configparser
 import matplotlib.pyplot as plt
 
 ####Helper Functions####
-def mean_calculator(measures: pd.DataFrame, lenses_per_nest=None) -> list[float]:
-    '''Calculate the desired means:
+def mean_calculator(MEAS: pd.DataFrame, lenses_per_nest: int=None) -> pd.DataFrame:
+    """Calculate the desired means.
     Parameters:
-    - measures (DataFrame): The input DataFrame containing fiber measurements.
-    - lenses_per_nest (int, optional): The number of lenses per nest for specific means calculation. If None, global means are calculated.
-    - Returns:
-    list: A list containing the mean values for fbx and fby. If lenses_per_nest is specified, it returns specific means for each position.
+    - MEAS (pd.DataFrame): Input DataFrame containing fiber measurements.
+    - lenses_per_nest (int, optional): Number of lenses per nest for specific means calculation.
+    If None, global means are calculated.
+    Returns:
+    pd.DataFrame: DataFrame containing mean values for fbx and fby.
+    If lenses_per_nest is specified, it returns specific means for each position.
+    Notes:
     If lenses_per_nest is None:
     - Calculates a global mean for fbx and fby.
-    - Returns the mean values for both fbx and fby in a list.
+    - Returns the mean values for both fbx and fby in a DataFrame.
     - Displays the mean values for fbx and fby.
     If lenses_per_nest is specified:
     - Calculates specific means for each position for fbx and fby based on the number of lenses per nest.
-    - Returns a list containing specific mean values for fbx and fby for each position.
-    - Displays the specific mean values for fbx and fby per position.'''
-    resume = measures.transpose().describe() #Transpose the df first due to describe() working in columns.
+    - Returns a DataFrame containing specific mean values for fbx and fby for each position.
+    - Displays the specific mean values for fbx and fby per position."""
+    resume = MEAS.transpose().describe() #Transpose the df first due to describe() working in columns.
     rough_means = list(resume.iloc[1, :].values)
     means = []; means_fbx = []; means_fby = [] #Preallocation
     if lenses_per_nest == None: #Calculates a global mean for fbx and for fby
         for i, mean in enumerate(rough_means): #Iterates and rounds every mean value
-            mean = round(mean, 4)
             means_fbx.append(mean) if i % 2 == 0 else means_fby.append(mean)
             means.append(mean)
         abs_mean_fbx = sum(means_fbx) / len(means_fbx)
         abs_mean_fby = sum(means_fby) / len(means_fby)
         means = [abs_mean_fbx, abs_mean_fby]
-        #print("Means (fbx and fby):") 
-        #print("Fiber x: " + str(round(abs_mean_fbx, 4)))
-        #print("Fiber y: " + str(round(abs_mean_fby, 4)))
+        means_df = pd.DataFrame()
+        df_list = []
+        for _ in range(int(MEAS.shape[0])):  #Iterates over the whole measurements data
+            nest_data = []
+            for j in range(len(ordered_means)):
+                value = float(ordered_means[j])
+                nest_data.append(value)
+            nest_df = pd.DataFrame({"mean": nest_data})
+            df_list.append(nest_df)
+        means_df = pd.concat(df_list, axis=0, ignore_index=True)
     else: #Calculates specific means for each position for fbx and fby
-        for index in range(lenses_per_nest*2):
-            if index % 2 == 0:
-                mean_fbx = rough_means[0::2] #Gets fbx values
-                mean_fbx = mean_fbx[index::lenses_per_nest] #Gets the values of the specific lens
-                abs_mean_fbx = sum(mean_fbx) / len(mean_fbx)
-                means_fbx.append(abs_mean_fbx)
-            else:
-                mean_fby = rough_means[0::2] #Gets fby values
-                mean_fby = mean_fby[index::lenses_per_nest] #Gets the values of the specific lens
-                abs_mean_fby = sum(mean_fby) / len(mean_fby)
-                means_fby.append(abs_mean_fby)
+        mean_fbx = rough_means[0::2] #Gets fbx values
+        mean_fby = rough_means[1::2] #Gets fby values
+        for index in range(lenses_per_nest):
+            specific_means = mean_fbx[index::lenses_per_nest] #Gets the values of the specific lens for fbx
+            abs_mean_fbx = sum(specific_means) / len(specific_means)
+            means_fbx.append(abs_mean_fbx)
+            specific_means = mean_fby[index::lenses_per_nest] #Gets the values of the specific lens for fby
+            abs_mean_fby = sum(specific_means) / len(specific_means)
+            means_fby.append(abs_mean_fby)
         means = means_fbx + means_fby
-        #print("Means per position (from lower to higher):") 
-        #print("  Fiber x: ")
-        #print([round(value, 4) for value in means_fbx])
-        #print("  Fiber y: ")
-        #print([round(value, 4) for value in means_fby])
-    return means
+        new_order = [0, 3, 1, 4, 2, 5]
+        ordered_means = [means[i] for i in new_order] #Reorder of the means for implementation
+        means_df = pd.DataFrame()
+        df_list = []
+        for _ in range(int(MEAS.shape[0] / (glob.lenses_per_nest * 2))):  #Iterates over every nest (e.g. 24/6=4 nests)
+            nest_data = []
+            for j in range(len(ordered_means)):
+                value = float(ordered_means[j])
+                nest_data.append(value)
+            nest_df = pd.DataFrame({"mean": nest_data})
+            df_list.append(nest_df)
+        means_df = pd.concat(df_list, axis=0, ignore_index=True)
+    return means_df
 
 def limits_gen(measurements: pd.DataFrame, means: list, lenses_per_nest=None) -> pd.DataFrame:
     '''Generate the limit values for a list containing the means in a DataFrame.
@@ -204,7 +218,7 @@ def plot_capability(measurements, analysis_table, label, sigma):
     limits = [low_limit, high_limit]  # Replace with the positions where you want to draw lines
     for index, limit in enumerate(limits):
         legend_label = "Low Specification Level: " if index==0 else "High Specification Level: "
-        plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{limit}")
+        plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{round(limit, 4)}")
     plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Average: {round(mean, 4)}")
     cal_low_limit = analysis_table.loc[label]['CAL_LO_LIMIT']
     cal_high_limit = analysis_table.loc[label]['CAL_HI_LIMIT']
