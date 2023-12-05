@@ -68,42 +68,30 @@ def mean_calculator(MEAS: pd.DataFrame, lenses_per_nest: int=None) -> pd.DataFra
         means_df = pd.concat(df_list, axis=0, ignore_index=True)
     return means_df
 
-def limits_generator(measurements: pd.DataFrame, means: list, lenses_per_nest=None) -> pd.DataFrame:
-    '''Generate the limit values for a list containing the means in a DataFrame.
-    Calculates the total mean for each fiber axis and applies it to the corresponding rows.
+def limits_generator(means_df: pd.DataFrame) -> pd.DataFrame:
+    """Generate lower and upper tolerance limits based on the means provided in the DataFrame.
     Parameters:
-    - measures (pd.DataFrame): The measurements dataframe to get its size.
-    - means (list): A list of means to generate limits for.
-    - lenses_per_nest (int, optional): The number of lenses per nest for specific means calculation. If None, global means are calculated.
+    - means_df (pd.DataFrame): A DataFrame containing a column 'mean' with mean values for each row.
     Returns:
-    - limits: A dataframe containing the generated limits.'''
+    - pd.DataFrame: A DataFrame with columns 'LO_LIMIT' and 'HI_LIMIT', representing the lower and upper
+    tolerance limits calculated based on the mean values. The limits are adjusted depending on the row index:
+    - If the index is even, the limits are calculated with x_tolerance.
+    - If the index is odd, the limits are calculated with y_tolerance."""
     x_tolerance = glob.x_tolerance
     y_tolerance = glob.y_tolerance
-    limits = pd.DataFrame(columns=["LO_LIMIT", "HI_LIMIT"]) #Columns names
-    if lenses_per_nest == None: #Calculates a global mean for fbx and for fby
-        for index in range(int(measurements.shape[0] / (lenses_per_nest * 2))): #Iterates over the positions of the dataframe
-            if index % 2 == 0: #Fbx rows
-                low_limit = round(means[0] - x_tolerance, 4)
-                high_limit = round(means[0] + x_tolerance, 4)
-            else: #Fby rows
-                low_limit = round(means[1] - y_tolerance, 4)
-                high_limit = round(means[1] + y_tolerance, 4)
-            current_limits_df = pd.DataFrame({"LO_LIMIT": [low_limit], "HI_LIMIT": [high_limit]}) #Create a DataFrame with the current low_limit and high_limit values
-            limits = pd.concat([limits, current_limits_df], ignore_index=True, axis=0) #Concatenate the current limits DataFrame with the main 'limits' DataFrame
-    else: #Calculates specific limits per each position for fbx and fby
-        new_order = [0, 3, 1, 4, 2, 5]
-        ordered_means = [means[i] for i in new_order] #Reorder de the means for implementation
-        for _ in range(int(measurements.shape[0] / (lenses_per_nest * 2))):  # Iterates over every nest (e.g. 24/6=4 nests)
-            for j in range(len(ordered_means)):
-                if j % 2 == 0:
-                    low_limit = round(ordered_means[j] - x_tolerance, 4)
-                    high_limit = round(ordered_means[j] + x_tolerance, 4)
-                else:
-                    low_limit = round(ordered_means[j] - y_tolerance, 4)
-                    high_limit = round(ordered_means[j] + y_tolerance, 4)
-                current_limits_df = pd.DataFrame({"LO_LIMIT": [low_limit], "HI_LIMIT": [high_limit]}) 
-                limits = pd.concat([limits, current_limits_df], ignore_index=True, axis=0) 
-    return limits
+    low_limits = []
+    high_limits = []
+    for index, row in means_df.iterrows():
+        if index % 2 == 0:
+            low_limit = row['mean'] - x_tolerance  # Adjusted calculation based on index parity
+            high_limit = row['mean'] + x_tolerance
+        else:
+            low_limit = row['mean'] - y_tolerance
+            high_limit = row['mean'] + y_tolerance
+        low_limits.append(low_limit)
+        high_limits.append(high_limit)
+    limits_df = pd.DataFrame({"LO_LIMIT": low_limits, "HI_LIMIT": high_limits})
+    return limits_df
 
 def ini_generator_personalized(limits: pd.DataFrame) -> None:
     '''Generates a ini file with personalized limits for every mean'''

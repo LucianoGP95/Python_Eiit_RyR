@@ -13,7 +13,7 @@ glob = Globals(
     tooling="TOP_Passat_B9",
     lenses_per_nest=3,
     x_tolerance=0.0125, 
-    y_tolerance=0.015,
+    y_tolerance=0.0168,
     lo_tolerance=0.02,
     hi_tolerance=0.03,
 )
