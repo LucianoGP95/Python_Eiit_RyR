@@ -54,9 +54,19 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
     plt.show()
 
 def plot_capability(measurements, analysis_table, label, sigma):
-    ''''Plot a histogram with the values of a single fiber'''
+    """Plot a histogram with specified limits and averages for a single fiber.
+        Parameters:
+        - measurements (pandas.DataFrame): DataFrame containing measurements for multiple fibers.
+        - analysis_table (pandas.DataFrame): DataFrame containing analysis information for the specified fiber.
+        - label (str): The label of the fiber for which the plot is generated.
+        - sigma (float): The sigma value associated with the measurements.
+        Returns:
+        None
+        This function generates a histogram for the specified fiber, overlaying it with vertical lines
+        representing various limits and averages. The plot includes specification limits, calibration limits,
+        the specified average, and the average of the fiber's measurements."""
     row = measurements.loc[label]
-    mean = analysis_table.loc[label]["mean"]
+    mean = analysis_table.loc[label]["mean"] #Gets the specification means
     plt.hist(row.values, bins=30, edgecolor='black', alpha=0.7)
     try:
         low_limit = analysis_table.loc[label]['LO_LIMIT']
@@ -64,17 +74,18 @@ def plot_capability(measurements, analysis_table, label, sigma):
     except:
         low_limit = analysis_table.loc[label]['LSL']
         high_limit = analysis_table.loc[label]['USL']
-    limits = [low_limit, high_limit]  # Replace with the positions where you want to draw lines
+    limits = [low_limit, high_limit]  #Replace with the positions where you want to draw lines
     for index, limit in enumerate(limits):
         legend_label = "Low Specification Level: " if index==0 else "High Specification Level: "
         plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{round(limit, 4)}")
-    plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Average: {round(mean, 4)}")
+    plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Specified average: {round(mean, 4)}") #Specification mean plotting
     cal_low_limit = analysis_table.loc[label]['CAL_LO_LIMIT']
     cal_high_limit = analysis_table.loc[label]['CAL_HI_LIMIT']
-    cal_limits = [cal_low_limit, cal_high_limit]  # Replace with the positions where you want to draw lines
+    cal_limits = [cal_low_limit, cal_high_limit]  #Replace with the positions where you want to draw lines
     for index, cal_limit in enumerate(cal_limits):
         legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
-        plt.axvline(cal_limit, color='blue', linestyle='dashed', linewidth=2, label=f"{legend_label}{cal_limit}")
+        plt.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
+    plt.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}") #Fiber mean plotting
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.xlabel('Values')
     plt.ylabel('Frequency')
