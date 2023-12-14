@@ -192,6 +192,33 @@ def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     filtered_df = pd.concat([filtered_df, limits], axis=1)  #Adds back the columns
     return filtered_df
 
+def capability_calculation(specifications: pd.DataFrame, sigma: int) -> pd.DataFrame:
+    capabilities = []
+    capabilities_corrected = []
+    low_limits = []
+    high_limits = []
+    for _, row in specifications.iterrows():
+        fiber_mean = row["fiber mean"]  #Fiber mean
+        std = row["std"]
+        LSL = row["LSL"]
+        USL = row["USL"]
+        low_limit = fiber_mean - (1/2) * (sigma * std)
+        high_limit = fiber_mean + (1/2) * (sigma * std)
+        Cp = (USL - LSL) / (sigma * std)
+        Cpl = (fiber_mean - LSL) / ((sigma/2 * std))
+        Cph = (USL - fiber_mean) / ((sigma/2 * std))
+        Cpk = min(Cpl, Cph)
+        low_limits.append(round(low_limit, 4))
+        high_limits.append(round(high_limit, 4))
+        capabilities.append(Cp)
+        capabilities_corrected.append(Cpk)
+    capabilities = pd.DataFrame(capabilities, columns=["Cp"])
+    capabilities_corrected = pd.DataFrame(capabilities_corrected, columns=["Cpk"])
+    low_limits = pd.DataFrame(low_limits, columns=["CAL_LO_LIMIT"])
+    high_limits = pd.DataFrame(high_limits, columns=["CAL_HI_LIMIT"])
+    analysis = pd.concat([specifications, low_limits, high_limits, capabilities, capabilities_corrected], axis=1)
+    return analysis
+
 def reset_df(df: pd.DataFrame) -> pd.DataFrame:
     df_2 = df.reset_index(drop=True)
     df_2.columns = [str(i) for i in range(df_2.shape[1])]
