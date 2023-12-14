@@ -11,43 +11,81 @@ import pandas as pd
 from globals import glob
 import matplotlib.pyplot as plt
 
-#Data extraction
-table_names = ['TOP_PASSAT_B9_measurements_2023y_11m_14d_17h_21m_03s', 'TOP_PASSAT_B9_limits_2023y_11m_14d_17h_21m_03s']
-MEAS = retrieve_data("input.db", table_names[0])
-LIMITS = retrieve_data("input.db", table_names[1])
-print(MEAS)
+os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 
-#Data preparation
-MEAS_format = rename_index(MEAS)
-new_column_names = {old_col: f"test: {i+1}" for i, old_col in enumerate(MEAS_format.columns)}
-MEAS_format.rename(columns=new_column_names, inplace=True)
-print("Measurements:")
-MEAS_format #Shows the df in html format
+def ini_generator(limits: pd.DataFrame, lenses_per_nest: int) -> None:
+    '''Generates an ini file with personalized limits for every mean.
+    Parameters:
+    - limits (pd.DataFrame): DataFrame containing the personalized limits for each mean.
+        The DataFrame is expected to have two columns, where the first column represents
+        the lower limit and the second column represents the upper limit.
+    - lenses_per_nest (int): Number of lenses per nest. Should be 3 or 4.
+    Raises:
+    ValueError: If lenses_per_nest is neither 3 nor 4.
+    The function reads a template .ini file based on the lenses_per_nest parameter,
+    updates the limits in the template with the provided limits DataFrame, and
+    saves the modified data to a new .ini file.
+    Example:
+    >>> import pandas as pd
+    >>> limits_data = {'LO_LIMIT': [10, 15, 20], 'HI_LIMIT': [30, 35, 40]}
+    >>> limits_df = pd.DataFrame(limits_data)
+    >>> ini_generator(limits_df, 3)
+    '''
+    class CaseSensitiveConfigParser(configparser.ConfigParser):
+        '''
+        A custom class to override optionxform and avoid uppercases being converted to lowercases.
+        '''
+        def optionxform(self, optionstr):
+            return optionstr
+    config = CaseSensitiveConfigParser()
+    #Import a template based on the number of lenses per nest
+    if lenses_per_nest == 3:
+        config.read('../data/template_12_fibers.ini')
+    elif lenses_per_nest == 4:
+        config.read('../data/template_16_fibers.ini')
+    else:
+        raise ValueError("lenses_per_nest should be 3 or 4.")
+    keys_list = []
+    #Get a keys list with the correct uppercased keys
+    for section_name in config.sections():
+        section = config[section_name]
+        keys_list.extend(section.keys())
+    HI_LIMIT = limits.iloc[:, 1]
+    LO_LIMIT = limits.iloc[:, 0]
+    #Iterate through the sections and options in the .ini file
+    for section in config.sections():
+        keys_list = list(config[section].keys())
+        j = 0
+        for i in range(0, len(keys_list), 2):
+            key1 = keys_list[i]
+            key2 = keys_list[i + 1]
+            col1 = str(limits.iloc[j, 1])
+            col2 = str(limits.iloc[j, 0])
+            j += 1
+            config[section][key1] = col1
+            config[section][key2] = col2
+    #Print the five first elements of the .ini for a quick check
+    for section in config.sections():
+        print(f"[{section}]")
+        i = 0
+        for key, value in config.items(section):
+            if i < 5:
+                print(f"{key} = {value}")
+                i += 1
+            else:
+                break
+        print("...")
+    #Save the modified data to a new .ini file
+    save_path = os.path.abspath(f'../a2_output/{glob.tooling}.ini')
+    with open(save_path, 'w') as configfile:
+        for section in config.sections():
+            configfile.write(f"[{section}]\n")
+            keys = keys_list  #Recover the original keys to write them in the .ini file
+            for i, key in enumerate(keys):
+                configfile.write(f"{key} = {config[section][key]}\n")
+                if (i + 1) % 4 == 0 and i < len(keys) - 1:  #Insert a blank line every four keys
+                    configfile.write("\n")
 
-LIMITS_format = rename_index(LIMITS)
-LIMITS_format.columns = ['LO_LIMIT', 'HI_LIMIT']
-print("limits:")
-LIMITS_format
-
-def plot_scatter(MEAS_format, LIMITS_format, label, sigma):
-    ''''Plot a scatter plot with the values of a single fiber'''
-    row = MEAS_format.loc[label]
-    plt.scatter(range(1, len(row) + 1), row.values, color='blue', alpha=0.7, label='Measured Values')
-    try:
-        low_limit = LIMITS_format.loc[label]['LO_LIMIT']
-        high_limit = LIMITS_format.loc[label]['HI_LIMIT']
-    except:
-        low_limit = LIMITS_format.loc[label]['LSL']
-        high_limit = LIMITS_format.loc[label]['USL']
-    plt.axhline(low_limit, color='red', linestyle='dashed', linewidth=2, label=f"Low Specification Level: {round(low_limit, 4)}")
-    plt.axhline(high_limit, color='red', linestyle='dashed', linewidth=2, label=f"High Specification Level: {round(high_limit, 4)}")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.xlabel('Measurement Index')
-    plt.ylabel('Values')
-    plt.title(f'Values for: {label} (Sigma: {sigma})')
-    plt.show()
-
-# Test the function
-fiber_label = 'Fiber_1'
-sigma_value = 1.5
-plot_scatter(MEAS_format, LIMITS_format, fiber_label, sigma_value)
+limits_data = {'LO_LIMIT': [10, 15, 20], 'HI_LIMIT': [30, 35, 40]}
+limits_df = pd.DataFrame(limits_data)
+ini_generator(limits_df, 3)
