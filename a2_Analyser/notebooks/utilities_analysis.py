@@ -178,8 +178,8 @@ def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     For each row in the input DataFrame, the function calculates the z-scores for the measurement values and
     replaces values with z-scores greater than the specified threshold with NaN. The original limits columns are retained."""
     rows = []
-    measures = df.iloc[:, :-2]  #Indexes the measurements
-    limits = df.iloc[:, -2:]  #Indexes the limits
+    measures = df.iloc[:, :-2]  
+    limits = df.iloc[:, -2:]  
     for row_idx in range(measures.shape[0]):  # Iterates over the rows
         row = measures.iloc[row_idx, :]
         if row.std() == 0: #If the standard deviation is zero, don't calculate z-scores and keep the original values
@@ -193,12 +193,27 @@ def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     return filtered_df
 
 def capability_calculation(specifications: pd.DataFrame, sigma: int) -> pd.DataFrame:
-    capabilities = []
-    capabilities_corrected = []
-    low_limits = []
-    high_limits = []
+    """
+    Calculate process capability indices (Cp and Cpk) for fiber-related specifications.
+    Parameters:
+    - specifications (pd.DataFrame): DataFrame containing fiber-related specifications including columns:
+        - "fiber mean": Mean of the fiber measurements.
+        - "std": Standard deviation of the fiber measurements.
+        - "LSL": Lower Specification Limit.
+        - "USL": Upper Specification Limit.
+    - sigma (int): Number of standard deviations used to determine the process capability.
+    Returns:
+    pd.DataFrame: DataFrame containing the original specifications along with additional columns:
+    - "CAL_LO_LIMIT": Calculated lower limit based on the specified sigma.
+    - "CAL_HI_LIMIT": Calculated upper limit based on the specified sigma.
+    - "Cp": Process capability index.
+    - "Cpk": Process capability index corrected for asymmetry.
+    The Cp is calculated as (USL - LSL) / (sigma * std), where std is the standard deviation.
+    The Cpk is the minimum of two indices, one for the lower specification limit and one for the upper specification limit.
+    It is calculated as the minimum of (fiber mean - LSL) / ((sigma/2) * std) and (USL - fiber mean) / ((sigma/2) * std)."""
+    capabilities = []; capabilities_corrected = []; low_limits = []; high_limits = []
     for _, row in specifications.iterrows():
-        fiber_mean = row["fiber mean"]  #Fiber mean
+        fiber_mean = row["fiber mean"]  
         std = row["std"]
         LSL = row["LSL"]
         USL = row["USL"]
