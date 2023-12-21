@@ -36,14 +36,11 @@ def mean_calculator(MEAS: pd.DataFrame, lenses_per_nest: int=None) -> pd.DataFra
         means = [abs_mean_fbx, abs_mean_fby]
         means_df = pd.DataFrame()
         df_list = []
-        for _ in range(int(MEAS.shape[0])):  #Iterates over the whole measurements data
-            nest_data = []
-            for j in range(len(ordered_means)):
-                value = float(ordered_means[j])
-                nest_data.append(value)
-            nest_df = pd.DataFrame({"mean": nest_data})
-            df_list.append(nest_df)
-        means_df = pd.concat(df_list, axis=0, ignore_index=True)
+        for i in range(int(MEAS.shape[0])):  #Iterates over the whole measurements data
+            fiber_mean = means[0] if i % 2 == 0 else means[1]
+            df_iteration = pd.DataFrame({'mean': [fiber_mean]})
+            df_list.append(df_iteration)
+        means_df = pd.concat(df_list, axis=0, ignore_index=False)
     else: #Calculates specific means for each position for fbx and fby
         mean_fbx = rough_means[0::2] #Gets fbx values
         mean_fby = rough_means[1::2] #Gets fby values
@@ -66,7 +63,8 @@ def mean_calculator(MEAS: pd.DataFrame, lenses_per_nest: int=None) -> pd.DataFra
                 nest_data.append(value)
             nest_df = pd.DataFrame({"mean": nest_data})
             df_list.append(nest_df)
-        means_df = pd.concat(df_list, axis=0, ignore_index=True)
+        means_df = pd.concat(df_list, axis=0, ignore_index=False)
+    means_df.reset_index(drop=True, inplace=True)
     return means_df
 
 def limits_generator(means_df: pd.DataFrame) -> pd.DataFrame:
@@ -94,7 +92,7 @@ def limits_generator(means_df: pd.DataFrame) -> pd.DataFrame:
     limits_df = pd.DataFrame({"LO_LIMIT": low_limits, "HI_LIMIT": high_limits})
     return limits_df
 
-def ini_generator(limits: pd.DataFrame, lenses_per_nest: int) -> None:
+def ini_generator(limits: pd.DataFrame, lenses_per_nest: int, nests_number: int) -> None:
     '''Generates an ini file with personalized limits for every mean.
     Parameters:
     - limits (pd.DataFrame): DataFrame containing the personalized limits for each mean.
@@ -116,10 +114,12 @@ def ini_generator(limits: pd.DataFrame, lenses_per_nest: int) -> None:
         def optionxform(self, optionstr):
             return optionstr
     config = CaseSensitiveConfigParser()
-    if lenses_per_nest == 3: #Import a template based on the number of lenses per nest
+    if lenses_per_nest == 3 and nests_number == 4: #Import a template based on the number of lenses per nest
         config.read('../data/template_12_fibers.ini')
-    elif lenses_per_nest == 4:
+    elif lenses_per_nest == 4 and nests_number == 4:
         config.read('../data/template_16_fibers.ini')
+    elif lenses_per_nest == 3 and nests_number == 2:
+        config.read('../data/template_6_fibers.ini')
     else:
         raise ValueError("lenses_per_nest should be 3 or 4.")
     keys_list = []
