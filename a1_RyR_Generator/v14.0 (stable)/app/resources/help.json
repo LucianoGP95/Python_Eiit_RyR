@@ -1,4 +1,4 @@
 {
     "version": "Version: 14.0",
-    "usage": "Basic Functionality:\n- 1: Place the .csv reports in 1_Place_Reports_Here or a desired folder. \n- 2: Select either 3_Results/Targer.xlsx or an empty .xlsx file. \n- 3: Examine a report file and select the first and last row that contains values accordingly. \n- 4: Select the number of nests used in the machine for the RyR. \n- 5: Press go and wait for the .xlsx to appear. Copy the formatted values into a model file."
+    "usage": "Basic Functionality:\n- 1: Place the new reports in 1_Place_Reports_Here or a desired folder. \n- 2: Select the folder where the reports where place and the one that will hold the results. \n- 3: Examine a report file and select the first and last row that contains values accordingly. \n- 4: Select the number of nests used in the machine for the RyR. \n- 5: Press go and wait for the result file to appear. \n- Optional: Copy the formatted values into a model file."
 }
