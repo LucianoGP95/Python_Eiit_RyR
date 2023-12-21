@@ -94,10 +94,10 @@ def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, la
     _add_range(xrange=xrange) #Sets a unified range for the x plot axis
     plt.show()
 
-def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: int, xrange=None, yrange=None, filter=None):
+def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: int, xrange=None, yrange=None, limit_filter=None):
     '''Draws the simple, square aproximation, given the limit points.'''
     positions = MEAS.shape[0] // (nests_number * 2)
-    if filter is None:
+    if limit_filter is None:
         for index in range(positions*2):
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
@@ -106,9 +106,9 @@ def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: i
                 plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
                 plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
                 plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
-    elif isinstance(filter, int):
+    elif isinstance(limit_filter, int):
         mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)} #Maps input values to the LIMITS indexers
-        limit_position = mapping.get(filter, None)
+        limit_position = mapping.get(limit_filter, None)
         x_limits = LIMITS.iloc[limit_position]
         y_limits = LIMITS.iloc[limit_position + 1]
         plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
