@@ -3,7 +3,7 @@ from globals import glob
 import matplotlib.pyplot as plt
 
 ###Main Functions
-def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=None):
+def plot_scatter(df: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits=None, yrange=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
         df (DataFrame): The input DataFrame containing the data.
@@ -51,15 +51,16 @@ def plot_scatter(df, title=None, xlabel=None, ylabel=None, filter=None, limits=N
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
-def plot_capability(measurements, analysis_table, label, sigma):
+def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, label: str, sigma: int, xrange=None):
     """Plot a histogram with specified limits and averages for a single fiber.
         Parameters:
         - measurements (pandas.DataFrame): DataFrame containing measurements for multiple fibers.
         - analysis_table (pandas.DataFrame): DataFrame containing analysis information for the specified fiber.
         - label (str): The label of the fiber for which the plot is generated.
-        - sigma (float): The sigma value associated with the measurements.
+        - sigma (int): The sigma value associated with the measurements.
         Returns:
         None
         This function generates a histogram for the specified fiber, overlaying it with vertical lines
@@ -86,13 +87,46 @@ def plot_capability(measurements, analysis_table, label, sigma):
         legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
         plt.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
     plt.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}") #Fiber mean plotting
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.title(f'Values for: {label} (Sigma: {sigma})')
     plt.xlabel('Values')
     plt.ylabel('Frequency')
-    plt.title(f'Values for: {label} (Sigma: {sigma})')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    _add_range(xrange=xrange) #Sets a unified range for the x plot axis
     plt.show()
 
-###Helper Functions
+def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: int, xrange=None, yrange=None, filter=None):
+    '''Draws the simple, square aproximation, given the limit points.'''
+    positions = MEAS.shape[0] // (nests_number * 2)
+    if filter is None:
+        for index in range(positions*2):
+            if index % 2 == 0:
+                x_limits = LIMITS.iloc[index]
+                y_limits = LIMITS.iloc[index + 1]
+                plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+                plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+                plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+                plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+    elif isinstance(filter, int):
+        mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)} #Maps input values to the LIMITS indexers
+        limit_position = mapping.get(filter, None)
+        x_limits = LIMITS.iloc[limit_position]
+        y_limits = LIMITS.iloc[limit_position + 1]
+        plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+    for index in range(MEAS.shape[0]):
+        if index % 2 == 0:
+            x_values = MEAS.iloc[index]
+            y_values = MEAS.iloc[index + 1]
+            plt.scatter(x_values, y_values)
+    plt.title('Measurements versus limits')
+    plt.xlabel('X measurement')
+    plt.ylabel('Y measurement')
+    _add_range(xrange=xrange, yrange=yrange) #Sets a unified range for the x and y plot axis
+    plt.show()
+
+###Hidden Functions
 def _labeler(index, j, k, fibers=None):
     '''Small function to correctly label legends'''
     if fibers in ["X", "Y"]:
@@ -120,6 +154,18 @@ def _draw_limits(fibers, limits):
                 plt.axhline(y=hi_limit, color=color2, linestyle='--', label=f'High limit: {fiber+1}')
         except Exception as e:
             print(f"Error adding limits: {e}")
+
+def _add_range(xrange: list=None, yrange: list=None):
+    '''Small function to set plot limits'''
+    if yrange is None and xrange is not None:
+        plt.xlim(xrange[0], xrange[1])
+    elif xrange is None and yrange is not None:
+        plt.ylim(yrange[0], yrange[1])
+    elif xrange is not None and yrange is not None:
+        plt.ylim(yrange[0], yrange[1])
+        plt.xlim(xrange[0], xrange[1])
+    else: 
+        pass
 
 ###Test Script
 if __name__ == '__main__':
