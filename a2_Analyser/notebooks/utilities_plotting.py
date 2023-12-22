@@ -3,10 +3,10 @@ from globals import glob
 import matplotlib.pyplot as plt
 
 ###Main Functions
-def plot_scatter(df: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits=None, yrange=None):
+def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits: pd.DataFrame=None, yrange=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
-        df (DataFrame): The input DataFrame containing the data.
+        MEAS (DataFrame): The input DataFrame containing the data.
         title (str, optional): The title of the plot.
         xlabel (str, optional): The label for the x-axis.
         ylabel (str, optional): The label for the y-axis.
@@ -22,20 +22,20 @@ def plot_scatter(df: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
         fibers = filter
-        rows_to_plot = df.iloc[1::2]  #Rows with odd indices
+        rows_to_plot = MEAS.iloc[1::2]  #Rows with odd indices
     elif filter == 'Y':
         fibers = filter
-        rows_to_plot = df.iloc[::2]  #Rows with even indices
+        rows_to_plot = MEAS.iloc[::2]  #Rows with even indices
     elif filter is None:
         fibers = None
-        rows_to_plot = df  #All rows
+        rows_to_plot = MEAS  #All rows
     elif isinstance(filter, int):  #Fiber specified by integer
         fibers = [x - 1 for x in [filter]]  #Get the correct index
-        rows_to_plot = df.iloc[fibers]
+        rows_to_plot = MEAS.iloc[fibers]
         _draw_limits(fibers, limits)
     elif isinstance(filter, (list, tuple)):  #Fiber specified by sequence of integers
         fibers = [x - 1 for x in filter] #Get the correct index
-        rows_to_plot = df.iloc[fibers]
+        rows_to_plot = MEAS.iloc[fibers]
         _draw_limits(fibers, limits)
     j = 0
     k = 0
@@ -43,14 +43,11 @@ def plot_scatter(df: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=
         j += 1 if index % 2 == 0 else 0  #Increment j only on odd iterations (1, 1, 2, 2, ...)
         k += 1
         plt.scatter(
-            list(range(1, df.shape[1] + 1)),
+            list(range(1, MEAS.shape[1] + 1)),
             row,
             label=_labeler(index, j, k, fibers=fibers)
         )
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
@@ -87,10 +84,7 @@ def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, la
         legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
         plt.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
     plt.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}") #Fiber mean plotting
-    plt.title(f'Values for: {label} (Sigma: {sigma})')
-    plt.xlabel('Values')
-    plt.ylabel('Frequency')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    _format_plot(title=f'Values for: {label} (Sigma: {sigma})', xlabel='Values', ylabel='Frequency')
     _add_range(xrange=xrange) #Sets a unified range for the x plot axis
     plt.show()
 
@@ -140,7 +134,7 @@ def _labeler(index, j, k, fibers=None):
         label = f"Guia_Luz_Blanco_FB{j}_{axis}"
     return label
 
-def _draw_limits(fibers, limits):
+def _draw_limits(fibers, limits: pd.DataFrame):
     '''Small function to draw limits'''
     if limits is not None and isinstance(limits, pd.DataFrame):
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -154,6 +148,13 @@ def _draw_limits(fibers, limits):
                 plt.axhline(y=hi_limit, color=color2, linestyle='--', label=f'High limit: {fiber+1}')
         except Exception as e:
             print(f"Error adding limits: {e}")
+
+def _format_plot(title=None, xlabel=None, ylabel=None, legend=True):
+    '''Small function to give format to the plot'''
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend == True else None
 
 def _add_range(xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
