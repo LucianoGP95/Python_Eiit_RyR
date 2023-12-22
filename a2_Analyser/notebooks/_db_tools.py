@@ -1,4 +1,4 @@
-#V15.0 20/11/2023
+#V16.0 22/12/2023
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -87,10 +87,11 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while deleting table: {str(e)}")
 
-    def consult_tables(self, filter=None):
+    def consult_tables(self, order=None, filter=None, verbose=True):
         '''Shows all the tables in the database. Allows for filtering.'''
+        show_order="name" if order == None else order #Default order
         cursor = self.conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' ORDER BY {show_order}")
         if filter:  #First, filters by the full name
             tables = [table[0] for table in cursor.fetchall() if filter.lower() in table[0].lower()]
             if not tables: #If not successful, filters by initial string
@@ -98,9 +99,11 @@ class SQLite_Handler:
         else:
             tables = [table[0] for table in cursor.fetchall()]
         _, db_name = os.path.split(self.db_path)
-        print(f"*{db_name}* actual contents:")
-        for table in tables:
-            print(f"    {table}")
+        if verbose == True:
+            print(f"*{db_name}* actual contents:")
+            for table in tables:
+                print(f"    {table}")
+        return tables
 
     def examine_table(self, table_name: str):
         '''Prints the desired table or tables if given in list or tuple format'''
@@ -303,10 +306,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
         print(f"Updated rules:\nSeparator:{self.sep}")
 
     def delete_table(self, table_name):
-        super().delete_table(table_name)  
-
-    def consult_tables(self):
-        super().consult_tables()
+        super().delete_table(table_name) 
 
     def examine_table(self, table_name):
         super().examine_table(table_name) 

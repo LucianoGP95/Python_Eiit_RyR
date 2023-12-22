@@ -25,11 +25,12 @@ def prepare_database(db_name: str, df: pd.DataFrame, table_name: str, extra_term
     dbh.close_conn(verbose=False)
     return table_name
 
-def consult_database(db_name: str):
+def consult_database(db_name: str, filter :str=None, verbose: bool=False) -> list[str]:
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
-    dbh.consult_tables()
+    table_list = dbh.consult_tables(filter=filter, verbose=verbose)
     dbh.close_conn(verbose=False)
+    return table_list
 
 def clear_databases(db_name: list[str]):
     '''Clears the specified databases'''
