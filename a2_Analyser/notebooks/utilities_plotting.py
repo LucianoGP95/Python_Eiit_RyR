@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from globals import glob
 import matplotlib.pyplot as plt
 
@@ -63,9 +64,13 @@ def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, la
         This function generates a histogram for the specified fiber, overlaying it with vertical lines
         representing various limits and averages. The plot includes specification limits, calibration limits,
         the specified average, and the average of the fiber's measurements."""
-    row = measurements.loc[label]
+    try:
+        row = measurements.loc[label]
+    except Exception:
+        print("Error in the input label. Check the fiber written exists for the tooling.")
     mean = analysis_table.loc[label]["mean"] #Gets the specification means
-    plt.hist(row.values, bins=30, edgecolor='black', alpha=0.7)
+    bins = 30
+    plt.hist(np.round(row.values, 4), bins=bins, edgecolor='black', alpha=0.7)
     try:
         low_limit = analysis_table.loc[label]['LO_LIMIT']
         high_limit = analysis_table.loc[label]['HI_LIMIT']
@@ -92,14 +97,15 @@ def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: i
     '''Draws the simple, square aproximation, given the limit points.'''
     positions = MEAS.shape[0] // (nests_number * 2)
     if limit_filter is None:
+        colors = ["r", "g", "b"]
         for index in range(positions*2):
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
                 y_limits = LIMITS.iloc[index + 1]
-                plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
-                plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
-                plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
-                plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+                plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
     elif isinstance(limit_filter, int):
         mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)} #Maps input values to the LIMITS indexers
         limit_position = mapping.get(limit_filter, None)

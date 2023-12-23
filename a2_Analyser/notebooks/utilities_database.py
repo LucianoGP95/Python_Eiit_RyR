@@ -46,9 +46,11 @@ def clear_databases(db_name: list[str]):
 def retrieve_data(db_name: str, table_name: str) -> pd.DataFrame:
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
-    df = dbh.retrieve(table_name)
+    df = None
+    if isinstance(table_name, str):
+        df = dbh.retrieve(table_name)
     dbh.close_conn(verbose=False) 
-    return df
+    return df if isinstance(df, pd.DataFrame) else None
 
 def rename_table(db_name, old_name, new_name, extra_term=None):
     _select_database(db_name)

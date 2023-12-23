@@ -89,3 +89,59 @@ def ini_generator(limits: pd.DataFrame, lenses_per_nest: int) -> None:
 limits_data = {'LO_LIMIT': [10, 15, 20], 'HI_LIMIT': [30, 35, 40]}
 limits_df = pd.DataFrame(limits_data)
 ini_generator(limits_df, 3)
+
+import ipywidgets as widgets
+from IPython.display import display, Javascript
+
+# Create a SelectMultiple widget
+options = ['Option 1', 'Option 2', 'Option 3', 'Option 4']
+select_multiple = widgets.SelectMultiple(options=options, layout={'width': '200px'})
+
+# Create a custom JavaScript callback to handle right-click events
+javascript_code = """
+document.addEventListener('DOMContentLoaded', function() {
+    var items = document.getElementsByClassName('p-SelectMultiple-option');
+    
+    Array.from(items).forEach(function(item) {
+        item.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+            
+            // Toggle the 'selected' class to simulate deselection
+            if (item.classList.contains('selected')) {
+                item.classList.remove('selected');
+            } else {
+                item.classList.add('selected');
+            }
+            
+            // Trigger the change event to update the widget's value
+            var widgetId = item.closest('.widget-select-multiple').id;
+            var widget = document.getElementById(widgetId);
+            widget.value = Array.from(widget.getElementsByClassName('selected')).map(function(selectedItem) {
+                return parseInt(selectedItem.dataset.value);
+            });
+            widget.dispatchEvent(new Event('change'));
+        });
+    });
+});
+"""
+
+# Display the JavaScript code using IPython's Javascript class
+display(Javascript(javascript_code))
+
+# Display the widget
+display(select_multiple)
+
+print(select_multiple.value)
+
+string_list = ["Temperature measurements", "Pressure data", "Wind speed measurements", "Humidity readings"]
+
+matching_string = next((string for string in string_list if "hello" in string), None)
+
+if matching_string is not None and "measurements" in matching_string:
+    print(f"The string containing 'measurements' is: {matching_string}")
+else:
+    print("No string contains the substring 'measurements'")
+
+
+
+
