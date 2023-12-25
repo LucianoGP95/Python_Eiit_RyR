@@ -3,6 +3,10 @@ import numpy as np
 from globals import glob
 import matplotlib.pyplot as plt
 
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 
+        'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan', 'darkred',
+        'lightblue', 'lime', 'gold', 'indigo', 'seagreen', 'tomato', 'sienna', 'thistle']
+
 ###Main Functions
 def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits: pd.DataFrame=None, yrange=None):
     ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
@@ -43,16 +47,45 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
     for index, row in rows_to_plot.iterrows():  #Plot the selected rows
         j += 1 if index % 2 == 0 else 0  #Increment j only on odd iterations (1, 1, 2, 2, ...)
         k += 1
+        color = colors[index] if index < len(colors) else "blue"
         plt.scatter(
-            list(range(1, MEAS.shape[1] + 1)),
-            row,
-            label=_labeler(index, j, k, fibers=fibers)
-        )
+            list(range(1, MEAS.shape[1] + 1)), row, color=color, label=_labeler(index, j, k, fibers=fibers))
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
-def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, label: str, sigma: int, xrange=None):
+def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, title=None, xlabel=None, ylabel=None, fiber=None, yrange=None):
+    try:
+        row = MEAS_format.loc[fiber]
+    except Exception:
+        print("Error in the input label. Check the fiber written exists for the tooling.")
+    plt.scatter(list(range(1, MEAS_format.shape[1] + 1)), row, label=fiber)
+    plt.plot(list(range(1, MEAS_format.shape[1] + 1)), row, linestyle='-', color='red')
+    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
+    _draw_limits([0], LIMITS)
+    _add_range(yrange=yrange) #Sets a unified range for the y plot axis
+    plt.show()
+
+def plot_boxplot(MEAS_format: pd.DataFrame, title="Fibers comparison", xlabel="Fiber", ylabel="Value", filter: str=None):
+    if filter is not None:
+        filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
+    if filter == 'X':
+        rows_to_plot = MEAS_format.iloc[1::2]  #Rows with odd indices
+        labels = rows_to_plot.index
+    elif filter == 'Y':
+        rows_to_plot = MEAS_format.iloc[::2]  #Rows with even indices
+        labels = rows_to_plot.index
+    elif filter is None:
+        rows_to_plot = MEAS_format  #All rows
+        labels = [item for item in rows_to_plot.index]
+    elif isinstance(filter, (int, list, tuple)):  #Fiber specified by integer
+        rows_to_plot = MEAS_format.iloc[filter]
+        labels = [item for item in rows_to_plot.index]
+    plt.boxplot(rows_to_plot.transpose(), labels=labels)
+    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
+    plt.show()
+
+def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, label: str, sigma: int, xrange=None):
     """Plot a histogram with specified limits and averages for a single fiber.
         Parameters:
         - measurements (pandas.DataFrame): DataFrame containing measurements for multiple fibers.
@@ -65,7 +98,7 @@ def plot_capability(measurements: pd.DataFrame, analysis_table: pd.DataFrame, la
         representing various limits and averages. The plot includes specification limits, calibration limits,
         the specified average, and the average of the fiber's measurements."""
     try:
-        row = measurements.loc[label]
+        row = MEAS_format.loc[label]
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
     mean = analysis_table.loc[label]["mean"] #Gets the specification means
@@ -140,16 +173,15 @@ def _labeler(index, j, k, fibers=None):
         label = f"Guia_Luz_Blanco_FB{j}_{axis}"
     return label
 
-def _draw_limits(fibers, limits: pd.DataFrame):
+def _draw_limits(fibers, LIMITS: pd.DataFrame):
     '''Small function to draw limits'''
-    if limits is not None and isinstance(limits, pd.DataFrame):
-        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    if LIMITS is not None and isinstance(LIMITS, pd.DataFrame):
         try:
             for i, fiber in enumerate(fibers):
                 color1 = colors[i * 2 % len(colors)] if i < len(colors) else "orange"
                 color2 = colors[(i * 2 + 1) % len(colors)] if i < len(colors) else "purple"
-                lo_limit = limits.iloc[fiber, 0]
-                hi_limit = limits.iloc[fiber, 1]
+                lo_limit = LIMITS.iloc[fiber, 0]
+                hi_limit = LIMITS.iloc[fiber, 1]
                 plt.axhline(y=lo_limit, color=color1, linestyle='--', label=f'Low limit: {fiber+1}')
                 plt.axhline(y=hi_limit, color=color2, linestyle='--', label=f'High limit: {fiber+1}')
         except Exception as e:
