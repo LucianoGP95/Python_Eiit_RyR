@@ -11,6 +11,10 @@ def position_chart(mean_slider, range_slider, auto_position_flag=False):
         mean_slider.disabled = True; range_slider.disabled = True
     return yrange
 
+def widget_select_one(options: list=["A", "B", "C"], value: str=None, layout: dict={'width': '600px'}) -> widgets.Select:
+    selected_button = widgets.Select(options=options, value=value, description="Files:", rows=10, layout=layout)
+    return selected_button
+
 def widget_int_entry(value: int=5, description: str="") -> widgets.IntText:
     int_entry = widgets.IntText(value=value, description=description)
     return int_entry

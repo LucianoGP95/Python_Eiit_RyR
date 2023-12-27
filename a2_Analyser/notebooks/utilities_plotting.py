@@ -149,36 +149,34 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, lab
     _add_range(xrange=xrange) #Sets a unified range for the x plot axis
     plt.show()
 
-def plot_simple_limits(MEAS: pd.DataFrame, LIMITS: pd.DataFrame, nests_number: int, xrange=None, yrange=None, limit_filter=None):
+def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None, yrange: list=None, limit_filter: [str, int]=None):
     '''Draws the simple, square aproximation, given the limit points.'''
-    positions = MEAS.shape[0] // (nests_number * 2)
+    positions = DATA_format.shape[0] // (nests_number * 2)
+    MEAS = DATA_format.iloc[:, :-2]; LIMITS = DATA_format.iloc[:, -2:]
     if limit_filter is None:
-        colors = ["r", "g", "b"]
         for index in range(positions*2):
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
                 y_limits = LIMITS.iloc[index + 1]
-                plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                plt.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
     elif isinstance(limit_filter, int):
         mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)} #Maps input values to the LIMITS indexers
         limit_position = mapping.get(limit_filter, None)
         x_limits = LIMITS.iloc[limit_position]
         y_limits = LIMITS.iloc[limit_position + 1]
-        plt.hlines(x_limits.at["LO_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.hlines(x_limits.at["HI_LIMIT"], xmin=y_limits.at["LO_LIMIT"], xmax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.vlines(y_limits.at["LO_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.vlines(y_limits.at["HI_LIMIT"], ymin=x_limits.at["LO_LIMIT"], ymax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        plt.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
     for index in range(MEAS.shape[0]):
         if index % 2 == 0:
             x_values = MEAS.iloc[index]
             y_values = MEAS.iloc[index + 1]
             plt.scatter(x_values, y_values)
-    plt.title('Measurements versus limits')
-    plt.xlabel('X measurement')
-    plt.ylabel('Y measurement')
+    _format_plot(title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', legend=False)
     _add_range(xrange=xrange, yrange=yrange) #Sets a unified range for the x and y plot axis
     plt.show()
 
