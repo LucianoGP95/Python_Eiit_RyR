@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from globals import glob
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 
         'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan', 'darkred',
@@ -66,7 +67,7 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
-def plot_boxplot(MEAS_format: pd.DataFrame, title="Fibers comparison", xlabel="Fiber", ylabel="Value", filter: str=None):
+def deprecated_plot_boxplot(MEAS_format: pd.DataFrame, title="Fibers comparison", xlabel="Fiber", ylabel="Value", filter: str=None):
     if filter is not None:
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
@@ -82,6 +83,28 @@ def plot_boxplot(MEAS_format: pd.DataFrame, title="Fibers comparison", xlabel="F
         rows_to_plot = MEAS_format.iloc[filter]
         labels = [item for item in rows_to_plot.index]
     plt.boxplot(rows_to_plot.transpose(), labels=labels)
+    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
+    plt.show()
+
+def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber", ylabel: str="Value", filter: str=None):
+    if filter is not None: #String filter
+        filter = filter.upper() if isinstance(filter, str) else filter  #Handles lower cases
+        xlabel = xlabel+filter
+        try:
+            array = MEAS_format.index.str.contains(filter)
+        except:
+            array = None
+        if array is not None:  #Handles transposition in the MEAS df argument
+            rows_to_plot = MEAS_format.loc[MEAS_format.index.str.contains(filter)]
+        else:
+            rows_to_plot = MEAS_format.loc[:, MEAS_format.columns.str.contains(filter)]
+    elif filter is None: #No filter
+        rows_to_plot = MEAS_format  
+    elif isinstance(filter, (int, list, tuple)):  #Fiber specified by numeric value
+        rows_to_plot = MEAS_format.iloc[filter]
+    rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)] #Renames columns for clarity
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(data=rows_to_plot, orient='v', palette='Set3')
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
     plt.show()
 
