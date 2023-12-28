@@ -1,4 +1,4 @@
-#V16.0 22/12/2023
+#V17.0 28/12/2023
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -251,7 +251,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             try:
                 table_name = re.sub(r'\W', '_', table_name) #Replace non-alphanumeric characters with underscores in table_name
                 self.df = df
-                self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
+                self.df.to_sql(table_name, self.conn, if_exists='replace', index=self.add_index)
                 self.conn.commit()
                 print(f"Dataframe stored as *{table_name}*")
             except Exception as e:
@@ -260,7 +260,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             try:
                 table_name = f"Exported_df"
                 self.df = df
-                self.df.to_sql(table_name, self.conn, if_exists='fail', index=False)
+                self.df.to_sql(table_name, self.conn, if_exists='fail', index=self.add_index)
                 self.conn.commit()
                 print(f"Dataframe stored as *{table_name}*")
             except Exception as e:
@@ -297,13 +297,15 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 print(f"Error concatenating dataframes: {str(e)}")
         return self.df
 
-    def set_csv_rules(self, sep=","):
-        '''Used to modify the rules that pandas uses to parse csv files.'''
-        try:
-            self.sep = sep
-        except Exception as e:
-            print(f"Error changing the rules: {str(e)} \nCurrently supported: Separator")
-        print(f"Updated rules:\nSeparator:{self.sep}")
+    def set_rules(self, sep=None, add_index=False, verbose=False):
+        '''Used to modify the rules that pandas uses to parse files.'''
+        self.add_index = add_index
+        self.sep = "," if sep is None else sep
+        if isinstance(self.sep, (str,)) and self.sep in (",", ".", " "):
+            print(f"Updated rules:\nSeparator set to:{self.sep}") if verbose == True else None
+        else:
+            self.sep = ","
+            print(f"Error changing the rules: Unsupported separator.\nSeparator set to:{self.sep}")
 
     def delete_table(self, table_name):
         super().delete_table(table_name) 
@@ -368,7 +370,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                     table_name = f"xlsx_table{j}"
                     print(f"Invalid table name for sheet: *{sheet_name}*. Adding it as *{table_name}*")
                 print(f"    {table_name}")
-                sheet.to_sql(table_name, self.conn, if_exists='replace', index=False)
+                sheet.to_sql(table_name, self.conn, if_exists='replace', index=self.add_index)
         except Exception as e:
             raise Exception(f"Error connecting to database: {str(e)}")
 

@@ -43,6 +43,7 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         fibers = [x - 1 for x in filter] #Get the correct index
         rows_to_plot = MEAS.iloc[fibers]
         _draw_limits(fibers, limits)
+    plt.figure(figsize=(12, 6))
     j = 0
     k = 0
     for index, row in rows_to_plot.iterrows():  #Plot the selected rows
@@ -60,6 +61,7 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
         row = MEAS_format.loc[fiber]
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
+    plt.figure(figsize=(12, 6))
     plt.scatter(list(range(1, MEAS_format.shape[1] + 1)), row, label=fiber)
     plt.plot(list(range(1, MEAS_format.shape[1] + 1)), row, linestyle='-', color='red')
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
@@ -67,26 +69,7 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
-def deprecated_plot_boxplot(MEAS_format: pd.DataFrame, title="Fibers comparison", xlabel="Fiber", ylabel="Value", filter: str=None):
-    if filter is not None:
-        filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
-    if filter == 'X':
-        rows_to_plot = MEAS_format.iloc[1::2]  #Rows with odd indices
-        labels = rows_to_plot.index
-    elif filter == 'Y':
-        rows_to_plot = MEAS_format.iloc[::2]  #Rows with even indices
-        labels = rows_to_plot.index
-    elif filter is None:
-        rows_to_plot = MEAS_format  #All rows
-        labels = [item for item in rows_to_plot.index]
-    elif isinstance(filter, (int, list, tuple)):  #Fiber specified by integer
-        rows_to_plot = MEAS_format.iloc[filter]
-        labels = [item for item in rows_to_plot.index]
-    plt.boxplot(rows_to_plot.transpose(), labels=labels)
-    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
-    plt.show()
-
-def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber", ylabel: str="Value", filter: str=None):
+def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber", ylabel: str="Value", filter: str=None, lenses_per_nest: int=None):
     if filter is not None: #String filter
         filter = filter.upper() if isinstance(filter, str) else filter  #Handles lower cases
         xlabel = xlabel+filter
@@ -102,7 +85,10 @@ def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlab
         rows_to_plot = MEAS_format  
     elif isinstance(filter, (int, list, tuple)):  #Fiber specified by numeric value
         rows_to_plot = MEAS_format.iloc[filter]
-    rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)] #Renames columns for clarity
+    if lenses_per_nest is None or filter is None: #Renames columns for clarity
+        rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)] 
+    elif lenses_per_nest is not None and filter is not None:
+        rows_to_plot.columns = [f"{i // lenses_per_nest + 1}-{(i % lenses_per_nest) + 1}" for i in range(rows_to_plot.shape[1])]
     plt.figure(figsize=(12, 6))
     sns.boxplot(data=rows_to_plot, orient='v', palette='Set3')
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)

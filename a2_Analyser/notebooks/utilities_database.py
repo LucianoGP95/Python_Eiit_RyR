@@ -8,10 +8,11 @@ dbh_i = db.SQLite_Data_Extractor("input.db") #Allows for database management
 dbh_o = db.SQLite_Data_Extractor("output.db")
 
 ###Helper functions
-def prepare_database(db_name: str, df: pd.DataFrame, table_name: str, extra_term=None) -> str:
+def prepare_database(db_name: str, df: pd.DataFrame, table_name: str, extra_term=None, add_index=False) -> str:
     '''Prepares the database from a ready-to-store df and returns the table name, getting it from the db'''
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
+    dbh.set_rules(add_index=add_index) if add_index == True else None
     if extra_term is not None and isinstance(extra_term, str): #Renames files with the extra term 
         old_name = table_name
         parts = old_name.split("_")
@@ -56,6 +57,12 @@ def rename_table(db_name, old_name, new_name, extra_term=None):
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
     dbh.rename_table(old_name, new_name, verbose=False)
+    dbh.close_conn(verbose=False) 
+
+def show_table(db_name, table_name):
+    _select_database(db_name)
+    dbh.reconnect(db_name, verbose=False)
+    dbh.examine_table([table_name])
     dbh.close_conn(verbose=False) 
 
 def prepare_data(target: (str, list[str]), filter=None):
