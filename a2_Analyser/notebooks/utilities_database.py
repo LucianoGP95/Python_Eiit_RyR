@@ -12,7 +12,7 @@ def prepare_database(db_name: str, df: pd.DataFrame, table_name: str, extra_term
     '''Prepares the database from a ready-to-store df and returns the table name, getting it from the db'''
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
-    dbh.set_rules(add_index=add_index) if add_index == True else None
+    dbh.set_rules(add_index=add_index) if add_index is not None else False
     if extra_term is not None and isinstance(extra_term, str): #Renames files with the extra term 
         old_name = table_name
         parts = old_name.split("_")

@@ -1,4 +1,4 @@
-#V17.0 28/12/2023
+#V18.0 09/01/2024
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -193,6 +193,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def __init__(self, db_name, rel_path=None):
         super().__init__(db_name, rel_path)  #Calls the parent class constructor
         self.source_name = None
+        self.add_index = False
         self.sep = ","
 
     def store(self, source):
@@ -273,7 +274,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             try:
                 self.cursor = self.conn.cursor()
                 query = f"SELECT * FROM {table_name}"
-                self.df = pd.read_sql(query, self.conn)
+                self.df = pd.read_sql(query, self.conn, index_col=None)
                 print(f"Table *{table_name}* retrieved succesfully.")
                 return self.df
             except Exception as e:

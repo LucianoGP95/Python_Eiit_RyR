@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from globals import glob
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 
@@ -24,6 +25,7 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
             - int, list, or tuple selects specific row(s) based on the provided filter.
     Returns:
         None '''
+    plt.figure(figsize=(12, 6))
     if filter is not None:
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
@@ -43,7 +45,6 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         fibers = [x - 1 for x in filter] #Get the correct index
         rows_to_plot = MEAS.iloc[fibers]
         _draw_limits(fibers, limits)
-    plt.figure(figsize=(12, 6))
     j = 0
     k = 0
     for index, row in rows_to_plot.iterrows():  #Plot the selected rows
@@ -102,7 +103,7 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, lab
         - label (str): The label of the fiber for which the plot is generated.
         - sigma (int): The sigma value associated with the measurements.
         Returns:
-        None
+        Matplotlib Figure
         This function generates a histogram for the specified fiber, overlaying it with vertical lines
         representing various limits and averages. The plot includes specification limits, calibration limits,
         the specified average, and the average of the fiber's measurements."""
@@ -110,30 +111,34 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, lab
         row = MEAS_format.loc[label]
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
-    mean = analysis_table.loc[label]["mean"] #Gets the specification means
+        return None
+    # Create a new figure
+    fig, ax = plt.subplots()
+    mean = analysis_table.loc[label]["mean"]  # Gets the specification means
     bins = 30
-    plt.hist(np.round(row.values, 4), bins=bins, edgecolor='black', alpha=0.7)
+    ax.hist(np.round(row.values, 4), bins=bins, edgecolor='black', alpha=0.7)
     try:
         low_limit = analysis_table.loc[label]['LO_LIMIT']
         high_limit = analysis_table.loc[label]['HI_LIMIT']
     except:
         low_limit = analysis_table.loc[label]['LSL']
         high_limit = analysis_table.loc[label]['USL']
-    limits = [low_limit, high_limit]  #Replace with the positions where you want to draw lines
+    limits = [low_limit, high_limit]  # Replace with the positions where you want to draw lines
     for index, limit in enumerate(limits):
-        legend_label = "Low Specification Level: " if index==0 else "High Specification Level: "
-        plt.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{round(limit, 4)}")
-    plt.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Specified average: {round(mean, 4)}") #Specification mean plotting
+        legend_label = "Low Specification Level: " if index == 0 else "High Specification Level: "
+        ax.axvline(limit, color='red', linestyle='dashed', linewidth=2, label=f"{legend_label}{round(limit, 4)}")
+    ax.axvline(mean, color='black', linestyle='dashed', linewidth=2, label=f"Specified average: {round(mean, 4)}")  # Specification mean plotting
     cal_low_limit = analysis_table.loc[label]['CAL_LO_LIMIT']
     cal_high_limit = analysis_table.loc[label]['CAL_HI_LIMIT']
-    cal_limits = [cal_low_limit, cal_high_limit]  #Replace with the positions where you want to draw lines
+    cal_limits = [cal_low_limit, cal_high_limit]  # Replace with the positions where you want to draw lines
     for index, cal_limit in enumerate(cal_limits):
-        legend_label = "Minimun admisible value: " if index==0 else "Maximun admisible value: "
-        plt.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
-    plt.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}") #Fiber mean plotting
-    _format_plot(title=f'Values for: {label} (Sigma: {sigma})', xlabel='Values', ylabel='Frequency')
-    _add_range(xrange=xrange) #Sets a unified range for the x plot axis
-    plt.show()
+        legend_label = "Minimum admissible value: " if index == 0 else "Maximum admissible value: "
+        ax.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
+    ax.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}")  # Fiber mean plotting
+    _format_plot_2(ax, title=f"Values for: {label} (Sigma: {sigma})", xlabel="Values", ylabel="Frequency")
+    _add_range_2(ax, xrange=xrange)  # Sets a unified range for the x plot axis
+    # Return the Matplotlib figure object
+    return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None, yrange: list=None, limit_filter: [str, int]=None):
     '''Draws the simple, square aproximation, given the limit points.'''
@@ -201,6 +206,14 @@ def _format_plot(title=None, xlabel=None, ylabel=None, legend=True):
     plt.ylabel(ylabel)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend == True else None
 
+def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, legend=True):
+    """Small function to give format to the plot."""
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if legend:
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
 def _add_range(xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
     if yrange is None and xrange is not None:
@@ -210,6 +223,18 @@ def _add_range(xrange: list=None, yrange: list=None):
     elif xrange is not None and yrange is not None:
         plt.ylim(yrange[0], yrange[1])
         plt.xlim(xrange[0], xrange[1])
+    else: 
+        pass
+
+def _add_range_2(ax, xrange: list=None, yrange: list=None):
+    '''Small function to set plot limits'''
+    if yrange is None and xrange is not None:
+        ax.set_xlim(xrange[0], xrange[1])
+    elif xrange is None and yrange is not None:
+        ax.set_ylim(yrange[0], yrange[1])
+    elif xrange is not None and yrange is not None:
+        ax.set_ylim(yrange[0], yrange[1])
+        ax.set_xlim(xrange[0], xrange[1])
     else: 
         pass
 

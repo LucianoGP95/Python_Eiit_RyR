@@ -1,4 +1,4 @@
-#V13.0 14/11/2023
+#V17.0 28/12/2023
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -26,13 +26,30 @@ class SQLite_Handler:
         else: 
             print(f"Database *{db_name}* found in: {self.db_path}")
 
-    def rename_table(self, old_name: str, new_name: str):
+    def rename_table(self, old_name: str, new_name: str, verbose=True):
+        old_name = re.sub(r'\W', '_', old_name) #To avoid illegal symbols
+        new_name = re.sub(r'\W', '_', new_name)
         try:
             self.cursor.execute(f"ALTER TABLE {old_name} RENAME TO {new_name};")
             self.conn.commit()
-            print(f"Table *{old_name}* renamed to *{new_name}*")
+            print(f"Table *{old_name}* renamed to *{new_name}*") if verbose else None
+        except sqlite3.OperationalError as e:
+            error_message = str(e)
+            if "there is already another table" in error_message:
+                print(f"Table *{new_name}* already exists. Skipping renaming.") if verbose else None
+            else:
+                raise Exception(f"Error while renaming table: {error_message}")
+
+    def rename_column(self, table_name, old_name, new_name, verbose=True):
+        try:
+            quoted_table_name = f'"{table_name}"'
+            quoted_old_name = f'"{old_name}"'
+            quoted_new_name = f'"{new_name}"'
+            self.cursor.execute(f"ALTER TABLE {quoted_table_name} RENAME COLUMN {quoted_old_name} TO {quoted_new_name};")
+            self.conn.commit()
+            print(f"Table *{table_name}* renamed from *{old_name}* to *{new_name}*") if verbose == True else None
         except Exception as e:
-            raise Exception(f"Error while renaming table: {str(e)}")
+            print(f"Error renaming column: {e}")
 
     def delete_table(self, table_name: str):
         try:
@@ -70,15 +87,23 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while deleting table: {str(e)}")
 
-    def consult_tables(self):
-        '''Shows all the tables in the database'''
+    def consult_tables(self, order=None, filter=None, verbose=True):
+        '''Shows all the tables in the database. Allows for filtering.'''
+        show_order="name" if order == None else order #Default order
         cursor = self.conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        _, file = os.path.split(self.db_path)
-        print(f"{file} actual contents:")
-        for table in tables:
-            print(f"    {table[0]}")
+        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' ORDER BY {show_order}")
+        if filter:  #First, filters by the full name
+            tables = [table[0] for table in cursor.fetchall() if filter.lower() in table[0].lower()]
+            if not tables: #If not successful, filters by initial string
+                tables = [table[0] for table in cursor.fetchall() if table[0].lower().startswith(filter.lower())]
+        else:
+            tables = [table[0] for table in cursor.fetchall()]
+        _, db_name = os.path.split(self.db_path)
+        if verbose == True:
+            print(f"*{db_name}* actual contents:")
+            for table in tables:
+                print(f"    {table}")
+        return tables
 
     def examine_table(self, table_name: str):
         '''Prints the desired table or tables if given in list or tuple format'''
@@ -106,15 +131,15 @@ class SQLite_Handler:
         except Exception as e:
             raise Exception(f"Error while examining tables: {(e)}")
 
-    def close_conn(self):
+    def close_conn(self, verbose=True):
         '''Closes the database connection when done'''
         try:
             self.conn.close()  
-            print(f"Closed connection to: {self.db_path}")
+            print(f"Closed connection to: {self.db_path}") if verbose else None
         except Exception as e:
             print(f"Error clearing the database: {str(e)}")
 
-    def reconnect(self, database, rel_path=None):
+    def reconnect(self, database, rel_path=None, verbose=True):
         '''Connects to either the same database or another database.'''
         old_db_path = self.db_path
         if rel_path is not None:  #Check if a new relative path was provided
@@ -126,18 +151,21 @@ class SQLite_Handler:
         try:
             self.conn = sqlite3.connect(self.db_path)
             self.cursor = self.conn.cursor()
-            print(f"Connected to {self.db_path}")
+            print(f"Connected to {self.db_path}") if verbose else None
         except Exception as e:
             print(f"Error trying to connect: {e}")
             self.db_path = old_db_path #Returns to the last valid path
 
-    def clear_database(self):
+    def clear_database(self, override=False):
         try:
             cursor = self.conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';") #Get a list of all tables in the database
             tables = cursor.fetchall()
             _, file = os.path.split(self.db_path)
-            confirmation = input(f"Warning: This action will clear all data from the database {file}.\nDo you want to continue? (y/n): ").strip().lower()
+            if override == False: #Override confirmation to dispatch multiple databases (WARNING, abstract a confirmation check to a superior level) 
+                confirmation = input(f"Warning: This action will clear all data from the database {file}.\nDo you want to continue? (y/n): ").strip().lower()
+            else:
+                confirmation = "y"
             if confirmation == 'y':
                 for table in tables: #Loop through the tables and delete them
                     table_name = table[0]
@@ -162,7 +190,7 @@ class SQLite_Handler:
 class SQLite_Data_Extractor(SQLite_Handler):
     '''Extracts structured data from different sources and turns it into a table in a database for quick deployment. Creates a db 
     from raw data or adds tables to it from raw data'''
-    def __init__(self, db_name, rel_path):
+    def __init__(self, db_name, rel_path=None):
         super().__init__(db_name, rel_path)  #Calls the parent class constructor
         self.source_name = None
         self.sep = ","
@@ -223,7 +251,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             try:
                 table_name = re.sub(r'\W', '_', table_name) #Replace non-alphanumeric characters with underscores in table_name
                 self.df = df
-                self.df.to_sql(table_name, self.conn, if_exists='replace', index=False)
+                self.df.to_sql(table_name, self.conn, if_exists='replace', index=self.add_index)
                 self.conn.commit()
                 print(f"Dataframe stored as *{table_name}*")
             except Exception as e:
@@ -232,7 +260,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
             try:
                 table_name = f"Exported_df"
                 self.df = df
-                self.df.to_sql(table_name, self.conn, if_exists='fail', index=False)
+                self.df.to_sql(table_name, self.conn, if_exists='fail', index=self.add_index)
                 self.conn.commit()
                 print(f"Dataframe stored as *{table_name}*")
             except Exception as e:
@@ -269,34 +297,21 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 print(f"Error concatenating dataframes: {str(e)}")
         return self.df
 
-    def set_csv_rules(self, sep=","):
-        '''Used to modify the rules that pandas uses to parse csv files.'''
-        try:
-            self.sep = sep
-        except Exception as e:
-            print(f"Error changing the rules: {str(e)} \nCurrently supported: Separator")
-        print(f"Updated rules:\nSeparator:{self.sep}")
-
-    def rename_table(self, old_name, new_name):
-        super().rename_table(old_name, new_name) 
+    def set_rules(self, sep=None, add_index=False, verbose=False):
+        '''Used to modify the rules that pandas uses to parse files.'''
+        self.add_index = add_index
+        self.sep = "," if sep is None else sep
+        if isinstance(self.sep, (str,)) and self.sep in (",", ".", " "):
+            print(f"Updated rules:\nSeparator set to:{self.sep}") if verbose == True else None
+        else:
+            self.sep = ","
+            print(f"Error changing the rules: Unsupported separator.\nSeparator set to:{self.sep}")
 
     def delete_table(self, table_name):
-        super().delete_table(table_name)  
-
-    def consult_tables(self):
-        super().consult_tables()
+        super().delete_table(table_name) 
 
     def examine_table(self, table_name):
         super().examine_table(table_name) 
-
-    def close_conn(self):
-        super().close_conn()  
-
-    def reconnect(self, *argv):
-        super().reconnect(*argv) 
-
-    def clear_database(self):
-        super().clear_database() 
 
     '''Internal methods'''
     def _inputhandler(self):
@@ -355,7 +370,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                     table_name = f"xlsx_table{j}"
                     print(f"Invalid table name for sheet: *{sheet_name}*. Adding it as *{table_name}*")
                 print(f"    {table_name}")
-                sheet.to_sql(table_name, self.conn, if_exists='replace', index=False)
+                sheet.to_sql(table_name, self.conn, if_exists='replace', index=self.add_index)
         except Exception as e:
             raise Exception(f"Error connecting to database: {str(e)}")
 
@@ -571,13 +586,13 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
-    dbh = SQLite_Data_Extractor("database.db", rel_path=None)
+    dbh = SQLite_Data_Extractor("sigma_values.db", rel_path=None)
     #Save a specific file inside ../data/
-    dbh.store("PASSAT_B9_2023y-11m-13d_15h-59m-35s.xlsx")
+    dbh.store("sigma.csv")
     #Info of all tables
     dbh.consult_tables()
     #Show info and the contents of specific tables
-    dbh.examine_table(["test1", "test2"])
+    dbh.examine_table(["sigma"])
     #Rename a table
     dbh.rename_table("test1", "new_test")
     #Get a table into a dataframe
