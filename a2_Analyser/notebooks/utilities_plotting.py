@@ -60,13 +60,14 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
 def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, title=None, xlabel=None, ylabel=None, fiber=None, yrange=None):
     try:
         row = MEAS_format.loc[fiber]
+        fiber = [MEAS_format.index.get_loc(fiber)]
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
     plt.figure(figsize=(12, 6))
     plt.scatter(list(range(1, MEAS_format.shape[1] + 1)), row, label=fiber)
     plt.plot(list(range(1, MEAS_format.shape[1] + 1)), row, linestyle='-', color='red')
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
-    _draw_limits([0], LIMITS)
+    _draw_limits(fiber, LIMITS)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
@@ -136,8 +137,7 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, lab
         ax.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
     ax.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}")  # Fiber mean plotting
     _format_plot_2(ax, title=f"Values for: {label} (Sigma: {sigma})", xlabel="Values", ylabel="Frequency")
-    _add_range_2(ax, xrange=xrange)  # Sets a unified range for the x plot axis
-    # Return the Matplotlib figure object
+    _add_range_2(ax, xrange=xrange)
     return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None, yrange: list=None, limit_filter: [str, int]=None):
@@ -170,6 +170,22 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
     _format_plot(title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', legend=False)
     _add_range(xrange=xrange, yrange=yrange) #Sets a unified range for the x and y plot axis
     plt.show()
+
+def to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: str="Capability_report.pdf", plot: str=None):
+    plot = plot.upper() if isinstance(plot, str) else None
+    if plot == "CAPABILITY":
+        new_index = 0
+        with PdfPages(os.path.join("..\\a2_output", name)) as pdf:
+            for index in range(MEAS_format.shape[0]):
+                new_index += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
+                axis = "X" if index % 2 == 0 else "Y"
+                title = f"Guia_Luz_Blanco_FB{new_index}_{axis}"
+                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36])
+                pdf.savefig(fig)
+                plt.close(fig)
+        print(f"Visualizations saved inside 'Capability_report.pdf'")
+    else:
+        raise ValueError("Unsupported plot type. Try 'Capability'.")
 
 ###Hidden Functions
 def _labeler(index, j, k, fibers=None):
