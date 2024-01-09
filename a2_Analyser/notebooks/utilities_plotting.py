@@ -171,7 +171,7 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
     _add_range(xrange=xrange, yrange=yrange) #Sets a unified range for the x and y plot axis
     plt.show()
 
-def to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: str="Capability_report.pdf", plot: str=None):
+def plot_to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: str="Capability_report.pdf", plot: str=None):
     plot = plot.upper() if isinstance(plot, str) else None
     if plot == "CAPABILITY":
         new_index = 0
