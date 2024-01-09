@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from globals import glob
@@ -71,7 +72,9 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
-def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber", ylabel: str="Value", filter: str=None, lenses_per_nest: int=None):
+def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber",
+                ylabel: str="Value", filter: str=None, lenses_per_nest: int=None, figsize: tuple=(12, 6)):
+    fig, ax = plt.subplots(figsize=figsize)
     if filter is not None: #String filter
         filter = filter.upper() if isinstance(filter, str) else filter  #Handles lower cases
         xlabel = xlabel+filter
@@ -96,13 +99,16 @@ def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlab
     _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
     plt.show()
 
-def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, label: str, sigma: int, xrange=None):
+def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, 
+                    label: str, sigma: int, xrange: list=None, figsize: tuple=(12, 6)):
     """Plot a histogram with specified limits and averages for a single fiber.
         Parameters:
         - measurements (pandas.DataFrame): DataFrame containing measurements for multiple fibers.
         - analysis_table (pandas.DataFrame): DataFrame containing analysis information for the specified fiber.
         - label (str): The label of the fiber for which the plot is generated.
         - sigma (int): The sigma value associated with the measurements.
+        - xrange (list): Range for the x-axis.
+        - figsize (tuple): Figure size in inches.
         Returns:
         Matplotlib Figure
         This function generates a histogram for the specified fiber, overlaying it with vertical lines
@@ -113,8 +119,7 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, lab
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
         return None
-    # Create a new figure
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     mean = analysis_table.loc[label]["mean"]  # Gets the specification means
     bins = 30
     ax.hist(np.round(row.values, 4), bins=bins, edgecolor='black', alpha=0.7)
@@ -180,10 +185,10 @@ def plot_to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: 
                 new_index += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
                 axis = "X" if index % 2 == 0 else "Y"
                 title = f"Guia_Luz_Blanco_FB{new_index}_{axis}"
-                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36])
+                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36], figsize=(10, 8))
                 pdf.savefig(fig)
                 plt.close(fig)
-        print(f"Visualizations saved inside 'Capability_report.pdf'")
+        return True
     else:
         raise ValueError("Unsupported plot type. Try 'Capability'.")
 
