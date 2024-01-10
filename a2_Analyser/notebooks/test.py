@@ -179,6 +179,32 @@ plt.show()
 
 display(df_transposed)
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import pdfkit
+
+# Create a sample DataFrame
+data = {'Name': ['John', 'Alice', 'Bob'],
+        'Age': [25, 30, 22],
+        'City': ['New York', 'San Francisco', 'Seattle']}
+df = pd.DataFrame(data)
+
+# Plot DataFrame as a table
+fig, ax = plt.subplots(figsize=(8, 4)) 
+ax.axis('tight')
+ax.axis('off')
+ax.table(cellText=df.values, colLabels=df.columns, cellLoc = 'center', loc='center')
+
+# Save the plot as an image
+plt.savefig('table.png')
+
+# Convert the image to PDF using pdfkit
+pdfkit.from_file('table.png', 'output.pdf')
+
+# Optionally, you can remove the temporary image file
+import os
+os.remove('table.png')
+
 
 
 

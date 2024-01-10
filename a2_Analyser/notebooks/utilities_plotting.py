@@ -5,6 +5,7 @@ from globals import glob
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
+import pdfkit
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 
         'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan', 'darkred',
@@ -12,7 +13,7 @@ colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k',
 
 ###Main Functions
 def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits: pd.DataFrame=None, yrange=None):
-    ''' Plots a DataFrame as a scatter plot with optional filtering and customization.
+    """Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
         MEAS (DataFrame): The input DataFrame containing the data.
         title (str, optional): The title of the plot.
@@ -25,7 +26,7 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
             - None plots all rows.
             - int, list, or tuple selects specific row(s) based on the provided filter.
     Returns:
-        None '''
+        None"""
     plt.figure(figsize=(12, 6))
     if filter is not None:
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
@@ -145,7 +146,8 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame,
     _add_range_2(ax, xrange=xrange)
     return fig
 
-def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None, yrange: list=None, limit_filter: [str, int]=None):
+def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None,
+                    yrange: list=None, limit_filter: [str, int]=None):
     '''Draws the simple, square aproximation, given the limit points.'''
     positions = DATA_format.shape[0] // (nests_number * 2)
     MEAS = DATA_format.iloc[:, :-2]; LIMITS = DATA_format.iloc[:, -2:]
@@ -180,17 +182,27 @@ def plot_to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: 
     plot = plot.upper() if isinstance(plot, str) else None
     if plot == "CAPABILITY":
         new_index = 0
-        with PdfPages(os.path.join("..\\a2_output", name)) as pdf:
+        with PdfPages(os.path.join("..\\a2_output\\report", name)) as pdf:
             for index in range(MEAS_format.shape[0]):
                 new_index += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
                 axis = "X" if index % 2 == 0 else "Y"
                 title = f"Guia_Luz_Blanco_FB{new_index}_{axis}"
-                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36], figsize=(10, 8))
+                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36], figsize=(15, 8))
                 pdf.savefig(fig)
                 plt.close(fig)
         return True
     else:
         raise ValueError("Unsupported plot type. Try 'Capability'.")
+
+def df_to_pdf(df, name_data):
+    temp_name = glob.tooling + "_data_" + ".jpg"
+    fig, ax = plt.subplots(figsize=(8, 4)) 
+    ax.axis('tight')
+    ax.axis('off')
+    ax.table(cellText=df.values, colLabels=df.columns, cellLoc = 'center', loc='center')
+    plt.savefig(os.path.abspath(os.path.join("..\\a2_output\\reports", temp_name)))
+    pdfkit.from_file(os.path.abspath(os.path.join("..\\a2_output\\reports", temp_name)), name_data)
+    os.remove(os.path.abspath(os.path.join("..\\a2_output\\reports", temp_name)))
 
 ###Hidden Functions
 def _labeler(index, j, k, fibers=None):
@@ -227,13 +239,13 @@ def _format_plot(title=None, xlabel=None, ylabel=None, legend=True):
     plt.ylabel(ylabel)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend == True else None
 
-def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, legend=True):
+def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, set_legend=True):
     """Small function to give format to the plot."""
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    if legend:
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    if set_legend:
+        ax.legend(loc='upper right', bbox_to_anchor=(1, 1))
 
 def _add_range(xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
