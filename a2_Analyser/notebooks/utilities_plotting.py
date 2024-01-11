@@ -182,7 +182,7 @@ def plot_to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: 
     plot = plot.upper() if isinstance(plot, str) else None
     if plot == "CAPABILITY":
         new_index = 0
-        with PdfPages(os.path.join("..\\a2_output\\report", name)) as pdf:
+        with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
             for index in range(MEAS_format.shape[0]):
                 new_index += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
                 axis = "X" if index % 2 == 0 else "Y"
