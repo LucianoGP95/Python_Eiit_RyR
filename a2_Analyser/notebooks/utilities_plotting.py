@@ -147,49 +147,86 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame,
     return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None,
-                    yrange: list=None, limit_filter: [str, int]=None):
-    '''Draws the simple, square aproximation, given the limit points.'''
+                    yrange: list=None, limit_filter: [str, int]=None, fiber_filter=None, figsize: tuple=(12, 6)):
+    """Draws a plot with simple, square approximations based on limit points and measurements.
+    Parameters:
+    - DATA_format (pd.DataFrame): The DataFrame containing measurement and limit data.
+    - nests_number (int): The number of nests used for positioning limit points.
+    - xrange (list, optional): The x-axis range for the plot. Default is None.
+    - yrange (list, optional): The y-axis range for the plot. Default is None.
+    - limit_filter (str or int, optional): Filter for specific limits based on position or index. Default is None.
+    - fiber_filter (None or str): Filter for specific fiber measurements (None, 'X', or 'Y'). Default is None.
+    Returns:
+    - matplotlib.figure.Figure: The Figure object representing the generated plot.
+    Note:
+    - If 'limit_filter' is an integer, it selects a specific set of limits based on the position.
+    - 'fiber_filter' can be used to filter measurements based on the fiber type ('X', 'Y').
+    - If both 'xrange' and 'yrange' are provided, they set the plot limits accordingly.
+    Example:
+    fig = plot_simple_limits(DATA, nests_number=2, xrange=[0, 10], yrange=[-5, 5], limit_filter=1, fiber_filter='X')
+    plt.show()"""
     positions = DATA_format.shape[0] // (nests_number * 2)
-    MEAS = DATA_format.iloc[:, :-2]; LIMITS = DATA_format.iloc[:, -2:]
+    MEAS = DATA_format.iloc[:, :-2]
+    LIMITS = DATA_format.iloc[:, -2:]
+    fig, ax = plt.subplots(figsize=figsize)
     if limit_filter is None:
-        for index in range(positions*2):
+        for index in range(positions * 2):
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
                 y_limits = LIMITS.iloc[index + 1]
-                plt.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
-                plt.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color=colors[index], linestyle='-')
+                ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
+                ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
+                ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
+                ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
     elif isinstance(limit_filter, int):
-        mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)} #Maps input values to the LIMITS indexers
+        mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)}  # Maps input values to the LIMITS indexers
         limit_position = mapping.get(limit_filter, None)
         x_limits = LIMITS.iloc[limit_position]
         y_limits = LIMITS.iloc[limit_position + 1]
-        plt.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
-        plt.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r", linestyle='-')
+        ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r",linestyle='-')
+        ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r",linestyle='-')
+        ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
+        ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
     for index in range(MEAS.shape[0]):
-        if index % 2 == 0:
-            x_values = MEAS.iloc[index]
-            y_values = MEAS.iloc[index + 1]
-            plt.scatter(x_values, y_values)
-    _format_plot(title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', legend=False)
-    _add_range(xrange=xrange, yrange=yrange) #Sets a unified range for the x and y plot axis
-    plt.show()
+        if fiber_filter is not None and "X" in fiber_filter:
+            fiber_index = DATA_format.index.get_loc(fiber_filter)
+            x_values = MEAS.iloc[fiber_index]
+            y_values = MEAS.iloc[fiber_index + 1]
+            ax.scatter(x_values, y_values)
+        elif fiber_filter is not None and "Y" in fiber_filter:
+            fiber_index = DATA_format.index.get_loc(fiber_filter)
+            x_values = MEAS.iloc[fiber_index]
+            y_values = MEAS.iloc[fiber_index - 1]
+            ax.scatter(x_values, y_values)
+        else:
+            if index % 2 == 0:
+                x_values = MEAS.iloc[index]
+                y_values = MEAS.iloc[index + 1]
+                ax.scatter(x_values, y_values)
+    _format_plot_2(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=False)
+    _add_range_2(ax, xrange=xrange, yrange=yrange)
+    return fig
 
-def plot_to_pdf(MEAS_format: pd.DataFrame, analysis_format: pd.DataFrame, name: str="Capability_report.pdf", plot: str=None):
+def plot_to_pdf(df: list[pd.DataFrame], name: str="Capability_report.pdf", plot: str=None):
     plot = plot.upper() if isinstance(plot, str) else None
     if plot == "CAPABILITY":
         new_index = 0
         with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
-            for index in range(MEAS_format.shape[0]):
-                new_index += 1 if index % 2 == 0 else 0  # Increment new_index only on odd iterations
+            for index in range(df[0].shape[0]):
+                new_index += 1 if index % 2 == 0 else 0  #Increment new_index only on odd iterations
                 axis = "X" if index % 2 == 0 else "Y"
                 title = f"Guia_Luz_Blanco_FB{new_index}_{axis}"
-                fig = plot_capability(MEAS_format, analysis_format, title, 6, xrange=[0.3, 0.36], figsize=(15, 8))
+                fig = plot_capability(df[0], df[1], title, 6, xrange=[0.3, 0.36], figsize=(12, 8))
                 pdf.savefig(fig)
                 plt.close(fig)
+        return True
+    if plot == "AXIS":
+        new_index = 0
+        with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
+            fig = plot_simple_limits(df, glob.nests_number, xrange=None, yrange=None,
+                                    limit_filter=None, fiber_filter=None, figsize=(12, 8))
+            pdf.savefig(fig)
+            plt.close(fig)
         return True
     else:
         raise ValueError("Unsupported plot type. Try 'Capability'.")
@@ -239,7 +276,7 @@ def _format_plot(title=None, xlabel=None, ylabel=None, legend=True):
     plt.ylabel(ylabel)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend == True else None
 
-def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, set_legend=True):
+def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
     """Small function to give format to the plot."""
     ax.set_title(title)
     ax.set_xlabel(xlabel)

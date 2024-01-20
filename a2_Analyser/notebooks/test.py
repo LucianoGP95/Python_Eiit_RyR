@@ -205,6 +205,18 @@ pdfkit.from_file('table.png', 'output.pdf')
 import os
 os.remove('table.png')
 
+import pandas as pd
+
+# Example DataFrame
+data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
+df = pd.DataFrame(data, index=['X', 'Y', 'Z'])
+
+# Get the row number (index) for a specific index label
+index_label = 'Y'
+row_number = df.index.get_loc(index_label)
+
+print(f"The row number for index label '{index_label}' is: {row_number}")
+
 
 
 
