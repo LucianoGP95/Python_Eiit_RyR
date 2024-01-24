@@ -44,12 +44,14 @@ def clear_databases(db_name: list[str]):
             dbh.clear_database(override=True)
         dbh.close_conn(verbose=False) 
 
-def retrieve_data(db_name: str, table_name: str) -> pd.DataFrame:
+def retrieve_data(db_name: str, table_name: str="Missing name", index_col: str=None) -> pd.DataFrame:
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
     df = None
     if isinstance(table_name, str):
+        dbh.set_rules(index_col=index_col)
         df = dbh.retrieve(table_name)
+        dbh.set_rules(index_col=None)
     dbh.close_conn(verbose=False) 
     return df if isinstance(df, pd.DataFrame) else None
 

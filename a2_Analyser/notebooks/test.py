@@ -218,5 +218,51 @@ row_number = df.index.get_loc(index_label)
 print(f"The row number for index label '{index_label}' is: {row_number}")
 
 
+import sqlite3
+import pandas as pd
+# Replace 'your_database.db' with the desired SQLite database file name
+db_file = 'your_database.db'
+# Sample data
+data = {
+    'Tooling name': ['MID_GOLF_PA'],
+    'Lenses per nest': ['3'],
+    'number of nests': ['4'],
+    'x-axis tolerance': ['0.0125'],
+    'y-axis tolerance': ['0.0165'],
+    'lower tolerance': ['0.02'],
+    'higher tolerance': ['0.03']
+}
+# Create a DataFrame
+df = pd.DataFrame(data)
+# Create a connection to the SQLite database
+conn = sqlite3.connect(db_file)
+# Create a cursor object to execute SQL queries
+cursor = conn.cursor()
+# Define the table creation query
+table_creation_query = '''
+CREATE TABLE IF NOT EXISTS your_table_name (
+    "index" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "Tooling name" TEXT,
+    "Lenses per nest" TEXT,
+    "number of nests" TEXT,
+    "x-axis tolerance" TEXT,
+    "y-axis tolerance" TEXT,
+    "lower tolerance" TEXT,
+    "higher tolerance" TEXT
+);
+'''
+# Execute the table creation query
+cursor.execute(table_creation_query)
+# Insert the data into the table
+df.to_sql('your_table_name', conn, if_exists='replace', index=False)
+display(df.transpose())
+query = f"SELECT * FROM 'your_table_name'"
+df = pd.read_sql(query, conn, index_col=None)
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
+# Display the resulting DataFrame
+display(df.transpose())
+
 
 

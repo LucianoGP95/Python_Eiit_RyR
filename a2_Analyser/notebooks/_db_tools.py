@@ -270,11 +270,12 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def retrieve(self, table_name):
         '''Retrieves a table from the database as a dataframe object. If the arg. is a list or tuple it will try to concatenate
         all the tables'''
+        self.index_col = None if not hasattr(self, 'index_col') else self.index_col
         if isinstance(table_name, str):
             try:
                 self.cursor = self.conn.cursor()
                 query = f"SELECT * FROM {table_name}"
-                self.df = pd.read_sql(query, self.conn, index_col=None)
+                self.df = pd.read_sql(query, self.conn, index_col=self.index_col)
                 print(f"Table *{table_name}* retrieved succesfully.")
                 return self.df
             except Exception as e:
@@ -286,7 +287,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 try:
                     self.cursor = self.conn.cursor()
                     query = f"SELECT * FROM {table}"
-                    df = pd.read_sql(query, self.conn)
+                    df = pd.read_sql(query, self.conn, index_col=self.index_col)
                     dataframes.append(df)
                     print(f"Table {table} retrieved succesfully.")
                 except Exception as e:
@@ -298,8 +299,9 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 print(f"Error concatenating dataframes: {str(e)}")
         return self.df
 
-    def set_rules(self, sep=None, add_index=False, verbose=False):
+    def set_rules(self, sep=None, add_index=False, index_col=None, verbose=False):
         '''Used to modify the rules that pandas uses to parse files.'''
+        self.index_col = index_col
         self.add_index = add_index
         self.sep = "," if sep is None else sep
         if isinstance(self.sep, (str,)) and self.sep in (",", ".", " "):
