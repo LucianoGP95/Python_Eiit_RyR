@@ -1,4 +1,4 @@
-#V18.0 09/01/2024
+#V19.0 25/01/2024
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -310,6 +310,14 @@ class SQLite_Data_Extractor(SQLite_Handler):
             self.sep = ","
             print(f"Error changing the rules: Unsupported separator.\nSeparator set to:{self.sep}")
 
+    def set_default_rules(self, verbose=False):
+        '''Sets or resets all rules to default.'''
+        self.index_col = None
+        self.add_index = False
+        self.sep = ","
+        if verbose == True:
+            print(f"Object rules set to default:\nindex_col={self.index_col}\nadd_index={self.add_index}\nsep={self.sep }")
+
     def delete_table(self, table_name):
         super().delete_table(table_name) 
 
@@ -590,6 +598,7 @@ class SQLite_Backup(SQLite_Handler):
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
     dbh = SQLite_Data_Extractor("sigma_values.db", rel_path=None)
+    dbh.set_default_rules(verbose=True)
     #Save a specific file inside ../data/
     dbh.store("sigma.csv")
     #Info of all tables

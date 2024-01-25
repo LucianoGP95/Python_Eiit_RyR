@@ -1,4 +1,4 @@
-import os, sys, time
+import os, sys, time, re
 import pandas as pd
 from globals import glob
 import _db_tools as db
@@ -36,7 +36,7 @@ def consult_database(db_name: str, filter :str=None, verbose: bool=False) -> lis
 def clear_databases(db_name: list[str]):
     '''Clears the specified databases'''
     db_name = [db_name] if isinstance(db_name,str) else db_name #Handle strings input
-    confirmation = input(f"Warning: This action will clear all data from the databasesy.\nDo you want to continue? (y/n): ").strip().lower()
+    confirmation = input(f"Warning: This action will clear all data from the databases.\nDo you want to continue? (y/n): ").strip().lower()
     if confirmation == 'y':
         for database in db_name:
             _select_database(database)
@@ -45,13 +45,15 @@ def clear_databases(db_name: list[str]):
         dbh.close_conn(verbose=False) 
 
 def retrieve_data(db_name: str, table_name: str="Missing name", index_col: str=None) -> pd.DataFrame:
+    table_name = re.sub(r'\W', '_', table_name)
     _select_database(db_name)
     dbh.reconnect(db_name, verbose=False)
     df = None
     if isinstance(table_name, str):
         dbh.set_rules(index_col=index_col)
         df = dbh.retrieve(table_name)
-        dbh.set_rules(index_col=None)
+        dbh.set_default_rules(verbose=False)
+        df.index.name = None
     dbh.close_conn(verbose=False) 
     return df if isinstance(df, pd.DataFrame) else None
 
@@ -73,9 +75,9 @@ def prepare_data(target: (str, list[str]), filter=None):
     data = pd.read_excel(target) #Import the RyR generator output
     if filter == None:
         df = data.iloc[2:, 1:] #Slices measures and limits
-    elif filter == "measurements":
+    elif filter == "Measurements":
         df = data.iloc[2:, 1:-2] #Slices measures
-    elif filter == "limits":
+    elif filter == "Limits":
         df = data.iloc[2:, -2:] #Slices limits
     else:
         raise Exception("Specify a supported filter key: None, MEAS, limits.")
