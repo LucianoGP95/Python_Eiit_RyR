@@ -264,5 +264,19 @@ conn.close()
 # Display the resulting DataFrame
 display(df.transpose())
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Example data
+tips = sns.load_dataset("tips")
+
+# Vertical box plot
+sns.boxplot(x="day", y="total_bill", data=tips, orient='v')
+plt.show()
+
+# Horizontal box plot
+sns.boxplot(x="total_bill", y="day", data=tips, orient='h')
+plt.show()
+
 
 

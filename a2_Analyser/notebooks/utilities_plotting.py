@@ -58,7 +58,6 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
             list(range(1, MEAS.shape[1] + 1)), row, color=color, label=_labeler(index, j, k, fibers=fibers))
     _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
-    plt.show()
     return fig
 
 def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, title=None, xlabel=None, ylabel=None, fiber=None, yrange=None):
@@ -81,25 +80,25 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
 
 def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber",
                 ylabel: str="Value", filter: str=None, lenses_per_nest: int=None):
-    _, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     if filter is not None:  #String filter
         filter = filter.upper() if isinstance(filter, str) else filter  #Handles lower cases
         xlabel += filter
         try:
             rows_to_plot = MEAS_format.loc[MEAS_format.index.str.contains(filter)]
-        except KeyError:
+        except AttributeError:
             rows_to_plot = MEAS_format.loc[:, MEAS_format.columns.str.contains(filter)]
     else:  #No filter
         rows_to_plot = MEAS_format
     if isinstance(filter, (int, list, tuple)):  #Fiber specified by numeric value
         rows_to_plot = MEAS_format.iloc[filter]
-    if lenses_per_nest is not None and filter is not None:  #Renames columns for clarity
+    if lenses_per_nest is not None and filter is not None:  #Renames columns for clarity when subgoruping lenses
         rows_to_plot.columns = [f"{i // lenses_per_nest + 1}-{(i % lenses_per_nest) + 1}" for i in range(rows_to_plot.shape[1])]
     else:
         rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)]
     sns.boxplot(data=rows_to_plot, orient='v', palette='Set3')
     _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel, set_legend=False)
-    plt.show()
+    return fig
 
 def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, 
                     label: str, sigma: int, xrange: list=None, figsize: tuple=(12, 6)):
@@ -220,6 +219,25 @@ def plot_to_pdf(df: list[pd.DataFrame], name: str="Capability_report.pdf", plot:
             pdf.savefig(fig)
             plt.close(fig)
             fig = plot_scatter(df, title='Scatter Plot, fiber Y', xlabel='test', ylabel='MEAS', filter='y') #Plot y axis values
+            pdf.savefig(fig)
+            plt.close(fig)
+        return True
+    if plot == "BOXPLOT":
+        new_index = 0
+        with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
+            fig = plot_boxplot(df[0], title="Fibers values versus test number", xlabel="Test number", ylabel="Value", filter=None)
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_boxplot(df[0], title="Fibers values versus test number, X-axis", xlabel="Test number: ", ylabel="Value", filter="X")
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_boxplot(df[0], title="Fibers values versus test number, Y-axis", xlabel="Test number: ", ylabel="Value", filter="Y")
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_boxplot(df[0].transpose(), title="Fibers values versus lens group, X-axis", xlabel="Lens groups: ", ylabel="Value", filter="X", lenses_per_nest=int(df[1].loc["Lenses per nest", "Tooling data"]))
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_boxplot(df[0].transpose(), title="Fibers values versus lens group, Y-axis", xlabel="Lens groups: ", ylabel="Value", filter="Y", lenses_per_nest=int(df[1].loc["Lenses per nest", "Tooling data"]))
             pdf.savefig(fig)
             plt.close(fig)
         return True
