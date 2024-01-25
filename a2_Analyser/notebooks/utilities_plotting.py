@@ -1,4 +1,5 @@
 import os
+from statistics import mean, stdev
 import pandas as pd
 import numpy as np
 from globals import glob
@@ -27,7 +28,7 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
             - int, list, or tuple selects specific row(s) based on the provided filter.
     Returns:
         None"""
-    plt.figure(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6))
     if filter is not None:
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
@@ -53,11 +54,12 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         j += 1 if index % 2 == 0 else 0  #Increment j only on odd iterations (1, 1, 2, 2, ...)
         k += 1
         color = colors[index] if index < len(colors) else "blue"
-        plt.scatter(
+        ax.scatter(
             list(range(1, MEAS.shape[1] + 1)), row, color=color, label=_labeler(index, j, k, fibers=fibers))
-    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel)
+    _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
+    return fig
 
 def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, title=None, xlabel=None, ylabel=None, fiber=None, yrange=None):
     try:
@@ -65,39 +67,38 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
         fiber = [MEAS_format.index.get_loc(fiber)]
     except Exception:
         print("Error in the input label. Check the fiber written exists for the tooling.")
-    plt.figure(figsize=(12, 6))
-    plt.scatter(list(range(1, MEAS_format.shape[1] + 1)), row, label=fiber)
-    plt.plot(list(range(1, MEAS_format.shape[1] + 1)), row, linestyle='-', color='red')
-    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
-    _draw_limits(fiber, LIMITS)
+    sigma_low = mean(row) + 6*stdev(row)
+    sigma_high = mean(row) - 6*stdev(row)
+    _, ax = plt.subplots(figsize=(12, 6))
+    ax.scatter(list(range(1, MEAS_format.shape[1] + 1)), row, label=fiber)
+    ax.plot(list(range(1, MEAS_format.shape[1] + 1)), row, linestyle="-", color="red")
+    _draw_limits(fiber, LIMITS, fixed_color="red")
+    ax.axhline(y=sigma_low, color="blue", linestyle="--", label=f"Sigma limits")
+    ax.axhline(y=sigma_high, color="blue", linestyle="--")
+    _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel, set_legend=True)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
 def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber",
-                ylabel: str="Value", filter: str=None, lenses_per_nest: int=None, figsize: tuple=(12, 6)):
-    fig, ax = plt.subplots(figsize=figsize)
-    if filter is not None: #String filter
+                ylabel: str="Value", filter: str=None, lenses_per_nest: int=None):
+    _, ax = plt.subplots(figsize=(12, 6))
+    if filter is not None:  #String filter
         filter = filter.upper() if isinstance(filter, str) else filter  #Handles lower cases
-        xlabel = xlabel+filter
+        xlabel += filter
         try:
-            array = MEAS_format.index.str.contains(filter)
-        except:
-            array = None
-        if array is not None:  #Handles transposition in the MEAS df argument
             rows_to_plot = MEAS_format.loc[MEAS_format.index.str.contains(filter)]
-        else:
+        except KeyError:
             rows_to_plot = MEAS_format.loc[:, MEAS_format.columns.str.contains(filter)]
-    elif filter is None: #No filter
-        rows_to_plot = MEAS_format  
-    elif isinstance(filter, (int, list, tuple)):  #Fiber specified by numeric value
+    else:  #No filter
+        rows_to_plot = MEAS_format
+    if isinstance(filter, (int, list, tuple)):  #Fiber specified by numeric value
         rows_to_plot = MEAS_format.iloc[filter]
-    if lenses_per_nest is None or filter is None: #Renames columns for clarity
-        rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)] 
-    elif lenses_per_nest is not None and filter is not None:
+    if lenses_per_nest is not None and filter is not None:  #Renames columns for clarity
         rows_to_plot.columns = [f"{i // lenses_per_nest + 1}-{(i % lenses_per_nest) + 1}" for i in range(rows_to_plot.shape[1])]
-    plt.figure(figsize=(12, 6))
+    else:
+        rows_to_plot.columns = [i for i in range(1, rows_to_plot.shape[1] + 1)]
     sns.boxplot(data=rows_to_plot, orient='v', palette='Set3')
-    _format_plot(title=title, xlabel=xlabel, ylabel=ylabel, legend=False)
+    _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel, set_legend=False)
     plt.show()
 
 def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame, 
@@ -142,8 +143,8 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame,
         legend_label = "Minimum admissible value: " if index == 0 else "Maximum admissible value: "
         ax.axvline(cal_limit, color='blue', linestyle=':', linewidth=2, label=f"{legend_label}{cal_limit}")
     ax.axvline(row.mean(), color='green', linestyle=':', linewidth=2, label=f"Fiber average: {round(row.mean(), 4)}")  # Fiber mean plotting
-    _format_plot_2(ax, title=f"Values for: {label} (Sigma: {sigma})", xlabel="Values", ylabel="Frequency")
-    _add_range_2(ax, xrange=xrange)
+    _format_plot(ax, title=f"Values for: {label} (Sigma: {sigma})", xlabel="Values", ylabel="Frequency")
+    _add_range(ax, xrange=xrange)
     return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None,
@@ -203,12 +204,25 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
                 x_values = MEAS.iloc[index]
                 y_values = MEAS.iloc[index + 1]
                 ax.scatter(x_values, y_values)
-    _format_plot_2(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=False)
-    _add_range_2(ax, xrange=xrange, yrange=yrange)
+    _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=False)
+    _add_range(ax, xrange=xrange, yrange=yrange)
     return fig
 
 def plot_to_pdf(df: list[pd.DataFrame], name: str="Capability_report.pdf", plot: str=None):
     plot = plot.upper() if isinstance(plot, str) else None
+    if plot == "SCATTER":
+        new_index = 0
+        with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
+            fig = plot_scatter(df, title='Scatter Plot, all fibers', xlabel='test', ylabel='MEAS') #Plot all guides
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_scatter(df, title='Scatter Plot, fiber X', xlabel='test', ylabel='MEAS', filter='x') #Plot x axis values
+            pdf.savefig(fig)
+            plt.close(fig)
+            fig = plot_scatter(df, title='Scatter Plot, fiber Y', xlabel='test', ylabel='MEAS', filter='y') #Plot y axis values
+            pdf.savefig(fig)
+            plt.close(fig)
+        return True
     if plot == "CAPABILITY":
         new_index = 0
         with PdfPages(os.path.join("..\\a2_output\\reports", name)) as pdf:
@@ -255,28 +269,25 @@ def _labeler(index, j, k, fibers=None):
         label = f"Guia_Luz_Blanco_FB{j}_{axis}"
     return label
 
-def _draw_limits(fibers, LIMITS: pd.DataFrame):
+def _draw_limits(fibers, LIMITS: pd.DataFrame, fixed_color: str=None):
     '''Small function to draw limits'''
     if LIMITS is not None and isinstance(LIMITS, pd.DataFrame):
         try:
             for i, fiber in enumerate(fibers):
                 color1 = colors[i * 2 % len(colors)] if i < len(colors) else "orange"
                 color2 = colors[(i * 2 + 1) % len(colors)] if i < len(colors) else "purple"
+                label_low = f'Low limit: {fiber+1}'; label_high = f'High limit: {fiber+1}'
+                if fixed_color is not None and isinstance(fixed_color, str):
+                    color1 = fixed_color; color2 = fixed_color
+                    label_low = "Specification limits"; label_high = None
                 lo_limit = LIMITS.iloc[fiber, 0]
                 hi_limit = LIMITS.iloc[fiber, 1]
-                plt.axhline(y=lo_limit, color=color1, linestyle='--', label=f'Low limit: {fiber+1}')
-                plt.axhline(y=hi_limit, color=color2, linestyle='--', label=f'High limit: {fiber+1}')
+                plt.axhline(y=lo_limit, color=color1, linestyle='--', label=label_low)
+                plt.axhline(y=hi_limit, color=color2, linestyle='--', label=label_high)
         except Exception as e:
             print(f"Error adding limits: {e}")
 
-def _format_plot(title=None, xlabel=None, ylabel=None, legend=True):
-    '''Small function to give format to the plot'''
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left') if legend == True else None
-
-def _format_plot_2(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
+def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
     """Small function to give format to the plot."""
     ax.set_title(title)
     ax.set_xlabel(xlabel)
@@ -293,18 +304,6 @@ def _add_range(xrange: list=None, yrange: list=None):
     elif xrange is not None and yrange is not None:
         plt.ylim(yrange[0], yrange[1])
         plt.xlim(xrange[0], xrange[1])
-    else: 
-        pass
-
-def _add_range_2(ax, xrange: list=None, yrange: list=None):
-    '''Small function to set plot limits'''
-    if yrange is None and xrange is not None:
-        ax.set_xlim(xrange[0], xrange[1])
-    elif xrange is None and yrange is not None:
-        ax.set_ylim(yrange[0], yrange[1])
-    elif xrange is not None and yrange is not None:
-        ax.set_ylim(yrange[0], yrange[1])
-        ax.set_xlim(xrange[0], xrange[1])
     else: 
         pass
 
