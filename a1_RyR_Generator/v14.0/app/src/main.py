@@ -1,5 +1,4 @@
 import os, json, sys
-os.chdir(os.path.dirname(os.path.realpath(__file__)))  ####Delete after debugging
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog

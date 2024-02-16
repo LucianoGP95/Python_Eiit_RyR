@@ -1,5 +1,4 @@
 import os, sys
-sys.path.append(os.path.abspath("../tools"))
 import _db_tools as dbt
 
 RyR_data = dbt.SQLite_Data_Extractor("RyR_data.db", rel_path="../../5_Database")

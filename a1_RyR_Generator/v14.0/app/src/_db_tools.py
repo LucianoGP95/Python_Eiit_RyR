@@ -1,4 +1,4 @@
-#V17.0 28/12/2023
+#V19.0 25/01/2024
 import os, json, time, re, sys
 import pandas as pd
 import sqlite3
@@ -9,17 +9,18 @@ import shutil
 class SQLite_Handler:
     '''SQLite custom handler'''
     def __init__(self, db_name: str, rel_path=None):
-        if rel_path == None:
-            self.db_path: str = os.path.join(os.path.abspath("../database/"), db_name)
-        else: #Optional relative path definition
+        os.chdir(os.path.dirname(__file__)) # Sets the script directory as the working directory 
+        if rel_path is None:
+            self.db_path = os.path.join(os.path.abspath("../database/"), db_name)
+        else: # Optional relative path definition
             try:
-                self.db_path: str = os.path.join(os.path.abspath(rel_path), db_name)
+                self.db_path = os.path.join(os.path.abspath(rel_path), db_name)
             except OSError as e:
-                print(f"Error with custom path creation: {e}")
-        self.df: pd.DataFrame = None
+                print(f"Error with custom path creation: {str(e)}")
+        self.df = None
         self.conn = None
         self.cursor = None
-        self.conn = sqlite3.connect(self.db_path) #Preventive connection/creation to the database
+        self.conn = sqlite3.connect(self.db_path) # Preventive connection/creation of the database
         self.cursor = self.conn.cursor()
         if not os.path.exists(self.db_path): 
             print(f"Database *{db_name}* created in: {self.db_path}")
@@ -193,6 +194,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def __init__(self, db_name, rel_path=None):
         super().__init__(db_name, rel_path)  #Calls the parent class constructor
         self.source_name = None
+        self.add_index = False
         self.sep = ","
 
     def store(self, source):
@@ -269,11 +271,12 @@ class SQLite_Data_Extractor(SQLite_Handler):
     def retrieve(self, table_name):
         '''Retrieves a table from the database as a dataframe object. If the arg. is a list or tuple it will try to concatenate
         all the tables'''
+        self.index_col = None if not hasattr(self, 'index_col') else self.index_col
         if isinstance(table_name, str):
             try:
                 self.cursor = self.conn.cursor()
                 query = f"SELECT * FROM {table_name}"
-                self.df = pd.read_sql(query, self.conn)
+                self.df = pd.read_sql(query, self.conn, index_col=self.index_col)
                 print(f"Table *{table_name}* retrieved succesfully.")
                 return self.df
             except Exception as e:
@@ -285,7 +288,7 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 try:
                     self.cursor = self.conn.cursor()
                     query = f"SELECT * FROM {table}"
-                    df = pd.read_sql(query, self.conn)
+                    df = pd.read_sql(query, self.conn, index_col=self.index_col)
                     dataframes.append(df)
                     print(f"Table {table} retrieved succesfully.")
                 except Exception as e:
@@ -297,8 +300,9 @@ class SQLite_Data_Extractor(SQLite_Handler):
                 print(f"Error concatenating dataframes: {str(e)}")
         return self.df
 
-    def set_rules(self, sep=None, add_index=False, verbose=False):
+    def set_rules(self, sep=None, add_index=False, index_col=None, verbose=False):
         '''Used to modify the rules that pandas uses to parse files.'''
+        self.index_col = index_col
         self.add_index = add_index
         self.sep = "," if sep is None else sep
         if isinstance(self.sep, (str,)) and self.sep in (",", ".", " "):
@@ -306,6 +310,14 @@ class SQLite_Data_Extractor(SQLite_Handler):
         else:
             self.sep = ","
             print(f"Error changing the rules: Unsupported separator.\nSeparator set to:{self.sep}")
+
+    def set_default_rules(self, verbose=False):
+        '''Sets or resets all rules to default.'''
+        self.index_col = None
+        self.add_index = False
+        self.sep = ","
+        if verbose == True:
+            print(f"Object rules set to default:\nindex_col={self.index_col}\nadd_index={self.add_index}\nsep={self.sep }")
 
     def delete_table(self, table_name):
         super().delete_table(table_name) 
@@ -586,7 +598,9 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
+    dbh = SQLite_Handler("sigma_values.db", rel_path="../5_database")
     dbh = SQLite_Data_Extractor("sigma_values.db", rel_path=None)
+    dbh.set_default_rules(verbose=True)
     #Save a specific file inside ../data/
     dbh.store("sigma.csv")
     #Info of all tables
