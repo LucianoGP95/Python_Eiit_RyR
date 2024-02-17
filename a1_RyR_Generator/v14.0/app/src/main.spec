@@ -3,7 +3,15 @@
 block_cipher = None
 
 a = Analysis(
-    ['main.py', 'core_logic.py', 'custom_entry_widget.py', 'database.py', 'file_number_checker.py', 'intelligent_cameras.py', 'light_guides.py', '_db_tools.py'],
+    ['main.py', 
+    'core_logic.py', 
+    'custom_entry_widget.py', 
+    'tools.database.py',
+    'tools._db_tools.py', 
+    'logic.file_number_checker.py', 
+    'logic.intelligent_cameras.py', 
+    'logic.light_guides.py' 
+    ],
     pathex=[],
     binaries=[],
     datas=[
@@ -40,5 +48,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico'  #Specify the path to the ICO file
+    icon='../assets/icon.ico' #Specify the path to the ICO file
 )

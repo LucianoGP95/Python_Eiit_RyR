@@ -2,12 +2,11 @@ import tkinter as tk
 import tkinter.filedialog
 import tkinter.messagebox
 import os, time
-import openpyxl as opxl #Read and write in xlsx
 import pandas as pd #Import from csv and manipulate data
-from file_number_checker import check_file_counts_2S, check_file_counts_4S
-from intelligent_cameras import file_filter, data_loader
-from light_guides import nest_filter, ndallocator, writer
-from database import store_all, store_actual
+from logic.file_number_checker import check_file_counts_2S, check_file_counts_4S
+from logic.intelligent_cameras import file_filter, data_loader
+from logic.light_guides import nest_filter, ndallocator, writer
+from tools.database import store_all, store_actual
 
 ##Default values init
 source_dirname = os.path.abspath("../../1_Place_Reports_Here")
