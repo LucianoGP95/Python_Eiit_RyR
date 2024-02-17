@@ -9,10 +9,10 @@ import shutil
 class SQLite_Handler:
     '''SQLite custom handler'''
     def __init__(self, db_name: str, rel_path=None):
-        os.chdir(os.path.dirname(__file__)) # Sets the script directory as the working directory 
+        os.chdir(os.path.dirname(__file__)) #Sets the script directory as the working directory 
         if rel_path is None:
-            self.db_path = os.path.join(os.path.abspath("../database/"), db_name)
-        else: # Optional relative path definition
+            self.db_path = os.path.join(os.path.abspath("../../database/"), db_name)
+        else: #Optional relative path definition
             try:
                 self.db_path = os.path.join(os.path.abspath(rel_path), db_name)
             except OSError as e:
@@ -20,7 +20,7 @@ class SQLite_Handler:
         self.df = None
         self.conn = None
         self.cursor = None
-        self.conn = sqlite3.connect(self.db_path) # Preventive connection/creation of the database
+        self.conn = sqlite3.connect(self.db_path) #Preventive connection/creation of the database
         self.cursor = self.conn.cursor()
         if not os.path.exists(self.db_path): 
             print(f"Database *{db_name}* created in: {self.db_path}")
@@ -598,7 +598,6 @@ class SQLite_Backup(SQLite_Handler):
 ###Test script
 if __name__ == '__main__':
     #Creates or connects to a db in ../database/
-    dbh = SQLite_Handler("sigma_values.db", rel_path="../5_database")
     dbh = SQLite_Data_Extractor("sigma_values.db", rel_path=None)
     dbh.set_default_rules(verbose=True)
     #Save a specific file inside ../data/
