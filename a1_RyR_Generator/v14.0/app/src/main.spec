@@ -3,21 +3,22 @@
 block_cipher = None
 
 a = Analysis(
-    ['main.py', 
-    'core_logic.py', 
-    'custom_entry_widget.py', 
-    'tools.database.py',
-    'tools._db_tools.py', 
-    'logic.file_number_checker.py', 
-    'logic.intelligent_cameras.py', 
-    'logic.light_guides.py' 
+    [
+        '../src/main.py',
+        '../src/core_logic.py',
+        '../src/custom_entry_widget.py',
+        '../src/tools/database.py',
+        '../src/tools/_db_tools.py',
+        '../src/logic/file_number_checker.py',
+        '../src/logic/intelligent_cameras.py',
+        '../src/logic/light_guides.py'
     ],
-    pathex=[],
+    pathex=['../src'],
     binaries=[],
     datas=[
-        ('../resources/help.json', 'src'),               # Include help.json from the src directory
-        ('../assets/background.png', 'assets'),   # Include background.png from the assets directory
-        ('../assets/icon.ico', 'assets'),         # Include icon.ico from the assets directory
+        ('../resources/help.json', 'datas'),
+        ('../assets/background.png', 'datas/assets'),
+        ('../assets/icon.ico', 'datas/assets'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -26,6 +27,7 @@ a = Analysis(
     excludes=[],
     noarchive=False,
 )
+
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
@@ -48,5 +50,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='../assets/icon.ico' #Specify the path to the ICO file
+    icon='../src/assets/icon.ico'
 )
