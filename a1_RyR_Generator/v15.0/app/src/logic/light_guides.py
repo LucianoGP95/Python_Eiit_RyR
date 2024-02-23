@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import numpy as np
 
-
 def nest_filter(source_dirname: str, substring: str) -> list[str]:
     '''Filters each nest reports by reading a substring in the filename'''
     file_list = os.listdir(source_dirname)
