@@ -1,5 +1,0 @@
-v8.0
-
--Changed default rows to search in the report
--ttk migration
--Reverted automatic row detection

@@ -1,5 +1,0 @@
-v9.0
-
--Added a bar menu.
--Added a help menu with usage explanations and versioning.
--Create a .json file to hold the contents of the help menu. 

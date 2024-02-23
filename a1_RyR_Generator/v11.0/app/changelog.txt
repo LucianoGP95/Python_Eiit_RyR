@@ -1,4 +1,0 @@
-v11.0
-
-- Data extraction for intelligent cameras functionality.
-- Specific target creation with dates (currently only in cameras)
