@@ -12,8 +12,8 @@ root_path = os.path.dirname(src_dir)
 assets_path = os.path.join(root_path, "assets")
 resources_path = os.path.join(root_path, "resources")
 ###Global variables
-source_dirname = os.path.abspath("../../1_Place_Reports_Here/")
-target_dirname = os.path.abspath("../../3_results/")
+source_dirname = os.path.abspath("../../../1_Place_Reports_Here/")
+target_dirname = os.path.abspath("../../../3_results/")
 print(source_dirname)
 
 ###json file loading and data extraction
