@@ -11,7 +11,7 @@ class Globals:
     hi_tolerance: float = 0.03 #General upper limit allowed tolerance
 
 glob = Globals(
-    tooling="VA_007",
+    tooling="SK_49_HIGH",
     lenses_per_nest=3,
     nests_number=2,
     x_tolerance=0.0125, 
