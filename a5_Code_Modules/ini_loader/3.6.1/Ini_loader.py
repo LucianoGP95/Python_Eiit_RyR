@@ -11,7 +11,6 @@ def load_keys(filepath: str, section: str) -> list:
     config.read(filepath)
     keys_list = []
     section_data = config[section] 
-    print(type(section_data))
     keys_list.extend([key.strip('"') for key in section_data.keys()])
     print("Section: \n" + section)
     print("Keys: ")
@@ -29,8 +28,9 @@ def load_values(filepath: str, section: str) -> list:
     print(values_list)
     return values_list
 
-###Test
-filepath = "C:\CONTROLAR\RefCodes\Refcodes.ini"
-field = "VA-007"
-keys = load_keys(filepath, field)
-values = load_values(filepath, field)
+###Test Script
+if __name__ == '__main__':
+    filepath = "C:\CONTROLAR\RefCodes\Refcodes.ini"
+    field = "RENAME"
+    keys = load_keys(filepath, field)
+    values = load_values(filepath, field)
