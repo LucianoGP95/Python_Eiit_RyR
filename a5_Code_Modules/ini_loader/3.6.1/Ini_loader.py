@@ -6,7 +6,7 @@ class MyConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr):
         return optionstr # do not change the case
 
-def load_keys(filepath: str, section: str) -> list[str]:
+def load_keys(filepath: str, section: str) -> list:
     config = MyConfigParser()
     config.read(filepath)
     keys_list = []
@@ -18,7 +18,7 @@ def load_keys(filepath: str, section: str) -> list[str]:
     print(keys_list)
     return keys_list
 
-def load_values(filepath: str, section: str) -> list[str]:
+def load_values(filepath: str, section: str) -> list:
     config = MyConfigParser()
     config.read(filepath)
     values_list = []
