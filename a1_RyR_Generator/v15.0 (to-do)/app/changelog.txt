@@ -1,5 +1,0 @@
-v15.0
-
-- Trying to add an option to generate the RyR and add it to the final result.
-- Stuck trying to pass the format_check variable to a secondary script.
-

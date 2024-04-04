@@ -1,4 +1,0 @@
-v10.0
-
-- Improved file path handling.
-- Pyinstaller compatible.
