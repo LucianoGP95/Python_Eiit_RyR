@@ -7,7 +7,7 @@ html_string = '''
     <title>Analyser results</title>
     <link rel="icon" type="image/png" href="../../assets/icon.ico">
   </head>
-  <link rel="stylesheet" type="text/css" href="df_style.css"/>
+  <link rel="stylesheet" type="text/css" href="../../resources/df_style.css"/>
   <body>
     {table}
   </body>
