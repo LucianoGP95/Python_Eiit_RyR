@@ -2,3 +2,4 @@
 *.pdf
 *.ini
 !example.ini
+*.html
