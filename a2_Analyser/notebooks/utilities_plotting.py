@@ -13,7 +13,7 @@ colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k',
         'lightblue', 'lime', 'gold', 'indigo', 'seagreen', 'tomato', 'sienna', 'thistle']
 
 ###Main Functions
-def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits: pd.DataFrame=None, yrange=None):
+def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filter=None, limits: pd.DataFrame=None, yrange=None, add_tendency=False):
     """Plots a DataFrame as a scatter plot with optional filtering and customization.
     Parameters:
         MEAS (DataFrame): The input DataFrame containing the data.
@@ -33,10 +33,10 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         filter = filter.upper() if isinstance(filter, str) else filter #Handles lower cases
     if filter == 'X':
         fibers = filter
-        rows_to_plot = MEAS.iloc[1::2]  #Rows with odd indices
+        rows_to_plot = MEAS.iloc[0::2]  #Rows with odd indices
     elif filter == 'Y':
         fibers = filter
-        rows_to_plot = MEAS.iloc[::2]  #Rows with even indices
+        rows_to_plot = MEAS.iloc[1::2]  #Rows with even indices
     elif filter is None:
         fibers = None
         rows_to_plot = MEAS  #All rows
@@ -54,8 +54,9 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         j += 1 if index % 2 == 0 else 0  #Increment j only on odd iterations (1, 1, 2, 2, ...)
         k += 1
         color = colors[index] if index < len(colors) else "blue"
-        ax.scatter(
-            list(range(1, MEAS.shape[1] + 1)), row, color=color, label=_labeler(index, j, k, fibers=fibers))
+        test = range(1, MEAS.shape[1] + 1)
+        ax.scatter(test, row, color=color, label=_labeler(index, j, k, fibers=fibers))
+        _add_tendency(ax, test, row, color) if add_tendency is True else None #Adds tendency lines for each row
     _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel)
     _add_range(yrange=yrange) #Sets a unified range for the y plot axis
     return fig
@@ -304,6 +305,12 @@ def _draw_limits(fibers, LIMITS: pd.DataFrame, fixed_color: str=None):
                 plt.axhline(y=hi_limit, color=color2, linestyle='--', label=label_high)
         except Exception as e:
             print(f"Error adding limits: {e}")
+
+def _add_tendency(ax, test, row, color):
+    m, b = np.polyfit(test, row, 1)
+    y = [m*x + b for x in test]
+    ax.plot(test, y, linewidth=2, color=color)
+    return y
 
 def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
     """Small function to give format to the plot."""
