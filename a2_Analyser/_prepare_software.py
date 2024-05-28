@@ -1,4 +1,4 @@
-### Script to quickly set the parent folder software into a desktop folder.
+### Script to quickly sets the parent folder software into a desktop folder.
 ### Run after cloning the repository in your PC.
 
 import os
