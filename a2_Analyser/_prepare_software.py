@@ -1,4 +1,6 @@
-### Script to quickly sets the parent folder software into a desktop folder.
+### Version 1.0: 07/06/2024
+
+### Script to quickly sets the parent folder software into a Desktop folder.
 ### Run after cloning the repository in your PC.
 
 import os
