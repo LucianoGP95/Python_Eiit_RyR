@@ -190,6 +190,7 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
         ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
     k = 1
     for index in range(MEAS.shape[0]):
+        color = colors[index] if index < len(colors) else "blue"
         if fiber_filter is not None and "X" in fiber_filter:
             fiber_index = DATA_format.index.get_loc(fiber_filter)
             x_values = MEAS.iloc[fiber_index]
@@ -204,7 +205,7 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
             if index % 2 == 0:
                 x_values = MEAS.iloc[index]
                 y_values = MEAS.iloc[index + 1]
-                ax.scatter(x_values, y_values, label=f"Fibra {k}")
+                ax.scatter(x_values, y_values, label=f"Fibra {k}", color=color)
                 k += 1
     _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=True, legend_position=legend_position)
     _add_range(ax, xrange=xrange, yrange=yrange)
