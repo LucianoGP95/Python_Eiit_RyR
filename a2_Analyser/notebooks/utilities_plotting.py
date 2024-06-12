@@ -320,7 +320,7 @@ def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
     if set_legend:
         ax.legend(loc='upper right', bbox_to_anchor=(1, 1))
 
-def _add_range(xrange: list=None, yrange: list=None):
+def _add_range(ax, xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
     if yrange is None and xrange is not None:
         plt.xlim(xrange[0], xrange[1])
