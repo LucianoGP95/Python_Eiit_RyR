@@ -173,6 +173,7 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
     fig, ax = plt.subplots(figsize=figsize)
     if positions == 3: # Limit labels for 3 positions
         limit_labels = {0: 'Limite inferior', 2: 'Limite medio', 4: 'Limite superior'}
+        linewidths = {0: 4, 2: 3, 4: 2}
     elif positions == 4: # Limit labels for 4 positions
         limit_labels = {0: 'Limite inferior', 2: 'Limite inferior medio', 4: 'Limite superior medio', 6: 'Limite superior'}
     else: # Limit labels for n positions
@@ -182,10 +183,12 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
                 y_limits = LIMITS.iloc[index + 1]
-                ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', label=limit_labels.get(index, None))
-                ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
-                ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
-                ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
+                l = linewidths.get(index, None)    
+                label = limit_labels.get(index, None) # Composes the final label for each limit set
+                ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l, label=label)
+                ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
+                ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
+                ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
     elif isinstance(limit_filter, int):
         mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)}  # Maps input values to the LIMITS indexers
         limit_position = mapping.get(limit_filter, None)
