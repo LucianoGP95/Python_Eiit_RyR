@@ -148,7 +148,7 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame,
     return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None,
-                    yrange: list=None, limit_filter: [str, int]=None, fiber_filter=None, figsize: tuple=(12, 6)):
+                    yrange: list=None, limit_filter: str | int=None, fiber_filter=None, figsize: tuple=(12, 6), legend_position: str="best"):
     """Draws a plot with simple, square approximations based on limit points and measurements.
     Parameters:
     - DATA_format (pd.DataFrame): The DataFrame containing measurement and limit data.
@@ -188,23 +188,25 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
         ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r",linestyle='-')
         ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
         ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
+    k = 1
     for index in range(MEAS.shape[0]):
         if fiber_filter is not None and "X" in fiber_filter:
             fiber_index = DATA_format.index.get_loc(fiber_filter)
             x_values = MEAS.iloc[fiber_index]
             y_values = MEAS.iloc[fiber_index + 1]
-            ax.scatter(x_values, y_values)
+            ax.scatter(x_values, y_values, label=index)
         elif fiber_filter is not None and "Y" in fiber_filter:
             fiber_index = DATA_format.index.get_loc(fiber_filter)
             x_values = MEAS.iloc[fiber_index]
             y_values = MEAS.iloc[fiber_index - 1]
-            ax.scatter(x_values, y_values)
+            ax.scatter(x_values, y_values, label=index)
         else:
             if index % 2 == 0:
                 x_values = MEAS.iloc[index]
                 y_values = MEAS.iloc[index + 1]
-                ax.scatter(x_values, y_values)
-    _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=False)
+                ax.scatter(x_values, y_values, label=f"Fibra {k}")
+                k += 1
+    _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=True, legend_position=legend_position)
     _add_range(ax, xrange=xrange, yrange=yrange)
     return fig
 
@@ -312,13 +314,13 @@ def _add_tendency(ax, test, row, color):
     ax.plot(test, y, linewidth=2, color=color)
     return y
 
-def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
+def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False, legend_position = "best"):
     """Small function to give format to the plot."""
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if set_legend:
-        ax.legend(loc='upper right', bbox_to_anchor=(1, 1))
+        ax.legend(loc=legend_position, bbox_to_anchor=(1, 1))
 
 def _add_range(ax, xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
