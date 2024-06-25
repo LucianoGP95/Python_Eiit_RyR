@@ -169,9 +169,23 @@ def RyR(df: pd.DataFrame) -> pd.DataFrame:
     std = df.iloc[:, :-2].std(axis=1)  # Standard deviation for each row, excluding limits
     df_RyR = (6 * std / (df.iloc[:, -1] - df.iloc[:, -2])) * 100  # Calculate RyR for the whole DataFrame
     df_RyR = pd.DataFrame(df_RyR, columns=['RyR'])  # Build a new DataFrame with the RyR values
-    pass_df = _qualitative_evaluation(df_RyR)  # Qualitative evaluation for RyR values
+    pass_df = qualitative_evaluation(df_RyR)  # Qualitative evaluation for RyR values
     RyR = pd.concat([df_RyR, pass_df], axis=1)
     return RyR
+
+def qualitative_evaluation(df: pd.DataFrame) -> pd.DataFrame:
+    """Provide a qualitative evaluation for each RyR value in a DataFrame.
+    Parameters:
+    - df (pd.DataFrame): The input DataFrame containing RyR values for a fiber.
+    Returns:
+    pd.DataFrame: A DataFrame containing the qualitative evaluation for the input fiber.
+    The DataFrame includes a qualitative evaluation ('Status') for each RyR value."""
+    pass_df = pd.DataFrame()
+    for _, ryr_value in enumerate(df['RyR']):
+        status = "Correct" if ryr_value <= 10 else ("Low fail" if 10 < ryr_value <= 25 else "High fail")
+        pass_df = pd.concat([pass_df, pd.DataFrame([status], columns=['Status'])], axis=0)
+    pass_df.reset_index(drop=True, inplace=True)
+    return pass_df
 
 def z_score_filter(df: pd.DataFrame, threshold=1) -> pd.DataFrame:
     """Applies a z-score filter to a DataFrame, removing values that do not meet the specified threshold.
@@ -239,72 +253,10 @@ def capability_calculation(specifications: pd.DataFrame, sigma: int) -> pd.DataF
     analysis = pd.concat([specifications, low_limits, high_limits, capabilities, capabilities_corrected], axis=1)
     return analysis
 
-def style_dataframe(df: pd.DataFrame, LIMITS: pd.DataFrame) -> pd.DataFrame:
-    """
-    Styles a DataFrame by applying conditional formatting to each cell based on specified limits.
-    Parameters:
-    df (pd.DataFrame): The DataFrame to be styled.
-    LIMITS (pd.DataFrame): A DataFrame containing the lower ('LO_LIMIT') and upper ('HI_LIMIT') limits 
-                           for each row of the input DataFrame. The index of LIMITS should match 
-                           the index of df.
-    Returns:
-    pd.io.formats.style.Styler: A Styler object with the applied styles.
-    The function works as follows:
-    1. It defines an inner function `color_cells` that determines the background color of a cell 
-       based on its value relative to the provided limits.
-    2. It defines another inner function `apply_row_style` that applies the `color_cells` function 
-       to each cell in a row, using the corresponding limits from the LIMITS DataFrame.
-    3. It uses the Pandas Styler API to apply the `apply_row_style` function to each row of the DataFrame. 
-    The `color_cells` function applies the following rules:
-    - If the cell value is greater than the high limit, the cell is colored yellow.
-    - If the cell value is less than the low limit, the cell is colored blue.
-    - If the cell value is equal to either limit, no color is applied.
-    - For all other cases, no color is applied. 
-    Example:
-    --------
-    >>> import pandas as pd
-    >>> data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
-    >>> df = pd.DataFrame(data)
-    >>> limits_data = {'LO_LIMIT': [1, 2, 2], 'HI_LIMIT': [3, 4, 5]}
-    >>> limits = pd.DataFrame(limits_data, index=[0, 1, 2])
-    >>> styled_df = style_dataframe(df, limits)
-    >>> styled_df.render()
-    """
-    def color_cells(val: float, lo_limit: float, hi_limit: float) -> str:
-        if val > hi_limit:
-            color = 'yellow'
-        elif val < lo_limit:
-            color = 'blue'
-        elif val == lo_limit:
-            color = 'grey'
-        elif val == hi_limit:
-            color = 'grey'
-        else:
-            color = 'grey'
-        return f'background-color: {color}'
-    def apply_row_style(row: pd.Series, limits_row: pd.Series) -> list[str]:
-        return [color_cells(val, limits_row['LO_LIMIT'], limits_row['HI_LIMIT']) for val in row]
-    styled_df = df.style.apply(lambda row: apply_row_style(row, LIMITS.loc[row.name]), axis=1)
-    return styled_df
-
 def reset_df(df: pd.DataFrame) -> pd.DataFrame:
     df_2 = df.reset_index(drop=True)
     df_2.columns = [str(i) for i in range(df_2.shape[1])]
     return df_2
-
-def _qualitative_evaluation(df: pd.DataFrame) -> pd.DataFrame:
-    """Provide a qualitative evaluation for each RyR value in a DataFrame.
-    Parameters:
-    - df (pd.DataFrame): The input DataFrame containing RyR values for a fiber.
-    Returns:
-    pd.DataFrame: A DataFrame containing the qualitative evaluation for the input fiber.
-    The DataFrame includes a qualitative evaluation ('Status') for each RyR value."""
-    pass_df = pd.DataFrame()
-    for _, ryr_value in enumerate(df['RyR']):
-        status = "Correct" if ryr_value <= 10 else ("Low fail" if 10 < ryr_value <= 25 else "High fail")
-        pass_df = pd.concat([pass_df, pd.DataFrame([status], columns=['Status'])], axis=0)
-    pass_df.reset_index(drop=True, inplace=True)
-    return pass_df
 
 #Test script
 if __name__ == '__main__':

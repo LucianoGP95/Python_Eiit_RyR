@@ -3,6 +3,7 @@ from statistics import mean, stdev
 import pandas as pd
 import numpy as np
 from globals import glob
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
@@ -58,7 +59,7 @@ def plot_scatter(MEAS: pd.DataFrame, title=None, xlabel=None, ylabel=None, filte
         ax.scatter(test, row, color=color, label=_labeler(index, j, k, fibers=fibers))
         _add_tendency(ax, test, row, color) if add_tendency is True else None #Adds tendency lines for each row
     _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel)
-    _add_range(yrange=yrange) #Sets a unified range for the y plot axis
+    _add_range(ax, yrange=yrange) #Sets a unified range for the y plot axis
     return fig
 
 def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, title=None, xlabel=None, ylabel=None, fiber=None, yrange=None):
@@ -76,7 +77,7 @@ def plot_control_chart(MEAS_format: pd.DataFrame, LIMITS: pd.DataFrame=None, tit
     ax.axhline(y=sigma_low, color="blue", linestyle="--", label=f"Sigma limits")
     ax.axhline(y=sigma_high, color="blue", linestyle="--")
     _format_plot(ax, title=title, xlabel=xlabel, ylabel=ylabel, set_legend=True)
-    _add_range(yrange=yrange) #Sets a unified range for the y plot axis
+    _add_range(ax, yrange=yrange) #Sets a unified range for the y plot axis
     plt.show()
 
 def plot_boxplot(MEAS_format: pd.DataFrame, title: str="Fibers comparison", xlabel: str="Fiber",
@@ -148,7 +149,7 @@ def plot_capability(MEAS_format: pd.DataFrame, analysis_table: pd.DataFrame,
     return fig
 
 def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: list=None,
-                    yrange: list=None, limit_filter: [str, int]=None, fiber_filter=None, figsize: tuple=(12, 6)):
+                    yrange: list=None, limit_filter: str | int=None, fiber_filter=None, figsize: tuple=(12, 6), legend_enabled: bool=False):
     """Draws a plot with simple, square approximations based on limit points and measurements.
     Parameters:
     - DATA_format (pd.DataFrame): The DataFrame containing measurement and limit data.
@@ -170,15 +171,24 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
     MEAS = DATA_format.iloc[:, :-2]
     LIMITS = DATA_format.iloc[:, -2:]
     fig, ax = plt.subplots(figsize=figsize)
+    if positions == 3: # Limit labels for 3 positions
+        limit_labels = {0: 'Limite inferior', 2: 'Limite medio', 4: 'Limite superior'}
+        linewidths = {0: 4, 2: 3, 4: 2}
+    elif positions == 4: # Limit labels for 4 positions
+        limit_labels = {0: 'Limite inferior', 2: 'Limite inferior medio', 4: 'Limite superior medio', 6: 'Limite superior'}
+    else: # Limit labels for n positions
+        limit_labels = {f'Limite {i}' for i in range(positions)}
     if limit_filter is None:
         for index in range(positions * 2):
             if index % 2 == 0:
                 x_limits = LIMITS.iloc[index]
                 y_limits = LIMITS.iloc[index + 1]
-                ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
-                ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
-                ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
-                ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-')
+                l = linewidths.get(index, None)    
+                label = limit_labels.get(index, None) # Composes the final label for each limit set
+                ax.hlines(y_limits.at["LO_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l, label=label)
+                ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
+                ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
+                ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"],color=colors[index], linestyle='-', linewidth=l)
     elif isinstance(limit_filter, int):
         mapping = {i: 2 * (i - 1) for i in range(1, positions + 1)}  # Maps input values to the LIMITS indexers
         limit_position = mapping.get(limit_filter, None)
@@ -188,23 +198,26 @@ def plot_simple_limits(DATA_format: pd.DataFrame, nests_number: int, xrange: lis
         ax.hlines(y_limits.at["HI_LIMIT"], xmin=x_limits.at["LO_LIMIT"], xmax=x_limits.at["HI_LIMIT"], color="r",linestyle='-')
         ax.vlines(x_limits.at["LO_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
         ax.vlines(x_limits.at["HI_LIMIT"], ymin=y_limits.at["LO_LIMIT"], ymax=y_limits.at["HI_LIMIT"], color="r",linestyle='-')
+    k = 1
     for index in range(MEAS.shape[0]):
+        color = colors[index] if index < len(colors) else "blue"
         if fiber_filter is not None and "X" in fiber_filter:
             fiber_index = DATA_format.index.get_loc(fiber_filter)
             x_values = MEAS.iloc[fiber_index]
             y_values = MEAS.iloc[fiber_index + 1]
-            ax.scatter(x_values, y_values)
+            ax.scatter(x_values, y_values, label=index)
         elif fiber_filter is not None and "Y" in fiber_filter:
             fiber_index = DATA_format.index.get_loc(fiber_filter)
             x_values = MEAS.iloc[fiber_index]
             y_values = MEAS.iloc[fiber_index - 1]
-            ax.scatter(x_values, y_values)
+            ax.scatter(x_values, y_values, label=index)
         else:
             if index % 2 == 0:
                 x_values = MEAS.iloc[index]
                 y_values = MEAS.iloc[index + 1]
-                ax.scatter(x_values, y_values)
-    _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=False)
+                ax.scatter(x_values, y_values, label=f"Fibra {k}", color=color)
+                k += 1
+    _format_plot(ax, title='Measurements versus limits', xlabel='X measurement', ylabel='Y measurement', set_legend=legend_enabled)
     _add_range(ax, xrange=xrange, yrange=yrange)
     return fig
 
@@ -306,21 +319,22 @@ def _draw_limits(fibers, LIMITS: pd.DataFrame, fixed_color: str=None):
         except Exception as e:
             print(f"Error adding limits: {e}")
 
-def _add_tendency(ax, test, row, color):
+def _add_tendency(ax: matplotlib.axes._axes.Axes, test, row, color):
+    """Smal function to plot the linear regression model of a set of a scatter set"""
     m, b = np.polyfit(test, row, 1)
     y = [m*x + b for x in test]
     ax.plot(test, y, linewidth=2, color=color)
     return y
 
-def _format_plot(ax, title=None, xlabel=None, ylabel=None, set_legend=False):
+def _format_plot(ax: matplotlib.axes._axes.Axes, title: str=None, xlabel: str=None, ylabel: str=None, set_legend: bool=False):
     """Small function to give format to the plot."""
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if set_legend:
-        ax.legend(loc='upper right', bbox_to_anchor=(1, 1))
+        ax.legend(loc="best", bbox_to_anchor=(1, 1))
 
-def _add_range(xrange: list=None, yrange: list=None):
+def _add_range(ax: matplotlib.axes._axes.Axes, xrange: list=None, yrange: list=None):
     '''Small function to set plot limits'''
     if yrange is None and xrange is not None:
         plt.xlim(xrange[0], xrange[1])
