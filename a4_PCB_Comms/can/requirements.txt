@@ -1,0 +1,5 @@
+packaging==24.1
+python-can==4.4.2
+pywin32==306
+typing_extensions==4.12.2
+wrapt==1.16.0
