@@ -10,9 +10,11 @@ if (Test-Path $venvActivateScript -PathType Leaf) {
     & $venvActivateScript
 
     # Optional: Inform the user that the virtual environment is activated
-    Write-Host "Virtual environment activated."
+    Write-Host "Virtual environment activated." -ForegroundColor Green
 } else {
     # Virtual environment activation script not found
     Write-Host "Error: Virtual environment activation script not found." -ForegroundColor Red
     Write-Host "Please make sure the virtual environment is set up correctly." -ForegroundColor Red
 }
+
+jupyter lab $scriptDir/notebooks
