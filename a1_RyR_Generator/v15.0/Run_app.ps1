@@ -13,4 +13,5 @@ Write-Host "env succesfully activated: $env_directory" -ForegroundColor Green
 Set-Location $src_directory
 
 # Run the main.py script
+Write-Host "Database info:" -ForegroundColor Yellow
 python main.py
