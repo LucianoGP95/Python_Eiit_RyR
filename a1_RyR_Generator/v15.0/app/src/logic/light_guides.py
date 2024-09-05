@@ -32,19 +32,3 @@ def writer(nest: str, data: np.ndarray, source_dirname: str, specific_rows: list
     Output = pd.DataFrame(data) #Makes a new Dataframe with the completed array
     Output = pd.concat([Text, Output, lo_limit, hi_limit], axis=1)
     return Output
-""" def compiler_1(Output_S1, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1])
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review
-def compiler_2(Output_S1, Output_S2, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1, Output_S2], ignore_index=True)
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review
-def compiler_4(Output_S1, Output_S2, Output_S3, Output_S4, target):
-    '''Concatenates the data frames for each nest'''
-    Final = pd.concat([Output_S1, Output_S2, Output_S3, Output_S4])
-    print(Final)
-    Final.to_excel(target, index=False, startrow=3, startcol=0, header=None) #Writes the values in the excel file
-    os.startfile(target) #Opens the file for review """
