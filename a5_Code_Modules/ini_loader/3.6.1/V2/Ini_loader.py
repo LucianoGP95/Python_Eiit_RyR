@@ -20,7 +20,7 @@ def load_keys(filepath: str, section: str) -> list:
         print("Section: \n" + section)
         print("Keys: ")
         print(keys_list)
-        return values_list
+        return keys_list
     except FileNotFoundError:
         print(f"Error: The file '{filepath}' was not found.")
     except Exception:
