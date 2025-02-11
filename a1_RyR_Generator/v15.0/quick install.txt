@@ -1,0 +1,13 @@
+1 Copy the folder into the desktop
+2 Open powershell
+3 Install scoop 
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+    Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+4 Install Python 3.12.9 and poetry 
+    scoop install python312
+    scoop install poetry
+5 cd the root folder
+6 Install the venv with poetry
+    poetry config virtualenvs.in-project true
+    poetry --no-root install
+6 Right click to execute Run_app.ps1

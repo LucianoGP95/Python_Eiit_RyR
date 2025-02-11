@@ -7,7 +7,7 @@ $src_directory = Join-Path $PSScriptRoot "app\src"
 
 # Activate the virtual environment
 & $env_directory
-Write-Host "env succesfully activated: $env_directory" -ForegroundColor Green
+Write-Host "env successfully activated: $env_directory" -ForegroundColor Green
 
 # Change directory to the source directory
 Set-Location $src_directory
