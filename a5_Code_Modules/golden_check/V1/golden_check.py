@@ -1,55 +1,68 @@
-def golden_check(Golden_Status, SN_Golden_enable, Nest, SerialNumber):
+def golden_check(Golden_Status, SN_Golden_enable, SerialNumber, parts_per_nest=1):
     """
-    Checks if the conditions for processing a golden piece are met.
+    Checks if the conditions for processing a golden piece are met, allowing for a second part per nest.
     
     Parameters:
-    Golden_Status: object
+    Golden_Status: tuple
         Contains the global status flags and serial numbers for golden pieces.
     SN_Golden_enable: bool
         Indicates if the golden check is enabled.
-    Nest: int
-        The current nest number (1 or 2).
     SerialNumber: str
         The serial number of the piece being processed.
+    parts_per_nest: int, optional
+        Number of parts per nest (default is 1, can be 2).
     
     Returns:
     bool
         True if conditions are met, False otherwise.
     """
-    # Si la lectura de Golden está deshabilitada
-    if not SN_Golden_enable:
-        return True
-    
-    # Determina si para el nido actual ya se han leído las piezas requeridas para ejecución habitual
-    if Nest == 1:
-        golden_ok_read = Golden_Status.Flag_Golden_OK_Read and Golden_Status.Flag_Golden_NOK_Read
-    elif Nest == 2:
-        golden_ok_read = Golden_Status.Flag_Golden_OK_Read and Golden_Status.Flag_Golden_NOK_Read
+    # Data preparation and security checks
+    (Flag_Golden_OK_Read, Flag_Golden_NOK_Read, Flag_Golden_OK_Read_A, Flag_Golden_NOK_Read_A,
+    SN_Golden_OK, SN_Golden_NOK, SN_Golden_OK_A, SN_Golden_NOK_A) = Golden_Status
+    if parts_per_nest in (1, 2):
+        pass
     else:
-        return False
+        AllowTest = False
+        Debug = "Unsupported number of parts per nest!"
+        print(Debug)
+        return (AllowTest, Debug)
     
-    # Comprobación del número de serie
-    serial_match = SerialNumber in (
-        Golden_Status.SN_Golden_OK, Golden_Status.SN_Golden_NOK
-    )
+    # Pass condition 1: Disabled system
+    if not SN_Golden_enable:
+        check_disabled = True
+    else:
+        check_disabled = False
     
-    return golden_ok_read or serial_match
+    # Pass condition 2: Gold OK and NOK parts already read
+    golden_ok_read = Flag_Golden_OK_Read and Flag_Golden_NOK_Read
+    
+    if parts_per_nest == 2:
+        golden_ok_read &= Flag_Golden_OK_Read_A and Flag_Golden_NOK_Read_A
+    
+    # Pass condition 3: Detected Gold OK or NOK parts serial number
+    serial_match = SerialNumber in (SN_Golden_OK, SN_Golden_NOK)
+    
+    if parts_per_nest == 2:
+        serial_match |= SerialNumber in (SN_Golden_OK_A, SN_Golden_NOK_A)
+    
+    # Checks if any condition is fulfilled to allow a test
+    AllowTest = golden_ok_read or serial_match or check_disabled
+    Debug = f"Check desactivado: {str(check_disabled)} - SN coincide con gold: {str(serial_match)} - Se han pasado las gold: {str(golden_ok_read)}"
+    return (AllowTest, Debug)
 
 # Test script
 if __name__ == "__main__":
     SN_Golden_enable = True
-    Nest = 1
     SerialNumber = "12345"
+    parts_per_nest = 1  # Cambia a 1 si solo hay una pieza por nido
 
-    class StationGlobals:
-        Flag_Golden_OK_Read = False
-        Flag_Golden_NOK_Read = False
-        SN_Golden_OK = ""
-        SN_Golden_NOK = ""
+    Golden_Status = (False, False, False, False, "", "", "", "")
+
+    AllowTest, Debug = golden_check(Golden_Status, SN_Golden_enable, SerialNumber, parts_per_nest)
     
-    Golden_Status = StationGlobals()
-
-    if golden_check(Golden_Status, SN_Golden_enable, Nest, SerialNumber):
+    if AllowTest:
         print("Condiciones Cumplidas")
+        print(Debug)
     else:
         print("Condiciones NO cumplidas")
+        print(Debug)
