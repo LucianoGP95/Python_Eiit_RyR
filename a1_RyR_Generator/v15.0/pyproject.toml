@@ -6,11 +6,11 @@ authors = ["Luciano <lucianogpingindustrial@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "=3.13.2"
-numpy = "=2.2.0"
-openpyxl = "=3.1.2"
-pandas = "=2.2.3"
-tk = "=0.1.0"
+python = ">=3.13.2"
+numpy = ">=2.2.0"
+openpyxl = ">=3.1.2"
+pandas = ">=2.2.3"
+tk = ">=0.1.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
